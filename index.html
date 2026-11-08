@@ -3,1288 +3,1005 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Iron Mind Mentoring — Progress Tracker</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<meta name="theme-color" content="#0D0D0D">
+<title>Iron Mind Mentoring</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  body { font-family: 'DM Sans', sans-serif; background: #F8F8F5; }
-  .fd { font-family: 'Bebas Neue', sans-serif; }
-  .fs { font-family: 'DM Serif Display', serif; }
-  input, textarea, select { font-family: 'DM Sans', sans-serif; }
-  .tab-active { background: #0D0D0D; color: #F5F5F0; }
-  .tab-inactive { background: white; color: #888884; border: 1px solid #DDDDDA; }
-  .on { display: block; }
-  .off { display: none; }
-  .metric-bar { transition: width 0.6s ease; }
+  :root { --ink:#0D0D0D; --paper:#F8F8F5; --line:#DDDDDA; --mute:#888884; --soft:#F0F0EB; --good:#15803d; --warn:#b45309; --bad:#b91c1c; }
+  body { font-family:'DM Sans',sans-serif; background:var(--paper); color:var(--ink); }
+  .fd { font-family:'Bebas Neue',sans-serif; letter-spacing:.06em; }
+  .fs { font-family:'DM Serif Display',serif; }
+  input, textarea, select, button { font-family:'DM Sans',sans-serif; }
+  .lbl { display:block; font-size:.65rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--mute); margin-bottom:.25rem; }
+  th.lbl, td.lbl { display:table-cell; }
+  .inp { width:100%; border:1px solid var(--line); padding:.5rem .75rem; font-size:.875rem; color:var(--ink); background:#fff; transition:border-color .2s; }
+  .inp:focus { outline:none; border-color:var(--ink); }
+  .card { background:#fff; border:1px solid var(--line); padding:1.25rem; }
+  .btn { background:var(--ink); color:#fff; font-size:.7rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; padding:.55rem 1rem; transition:background .2s; white-space:nowrap; }
+  .btn:hover { background:#333; }
+  .btn-o { border:1px solid var(--line); color:var(--mute); font-size:.7rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; padding:.5rem 1rem; background:#fff; white-space:nowrap; transition:all .2s; }
+  .btn-o:hover { border-color:var(--ink); color:var(--ink); }
+  .chip { display:inline-block; font-size:.62rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; padding:.15rem .5rem; background:var(--soft); color:var(--ink); }
+  .tab { font-size:.7rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; padding:.5rem 1rem; white-space:nowrap; border:1px solid var(--line); background:#fff; color:var(--mute); }
+  .tab.on { background:var(--ink); color:#F5F5F0; border-color:var(--ink); }
+  .nav a { font-size:.7rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:#AAAAAA; padding:.4rem .2rem; border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; }
+  .nav a.on, .nav a:hover { color:#fff; border-color:#fff; }
+  .scroll-x { overflow-x:auto; scrollbar-width:none; }
+  .scroll-x::-webkit-scrollbar { display:none; }
+  .track { position:relative; height:22px; }
+  .track .rail { position:absolute; left:0; right:0; top:10px; height:2px; background:var(--soft); }
+  .track .seg { position:absolute; top:10px; height:2px; background:var(--ink); }
+  .track .dot { position:absolute; top:4px; width:14px; height:14px; margin-left:-7px; border-radius:50%; border:2px solid #fff; cursor:default; }
+  .day { width:100%; aspect-ratio:1; border:1px solid var(--line); font-size:.6rem; font-weight:700; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; background:#fff; color:var(--mute); }
+  .day.d1 { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .day.d2 { background:repeating-linear-gradient(45deg,#fff,#fff 3px,#e5e5e0 3px,#e5e5e0 6px); color:var(--mute); }
+  input[type=range] { accent-color:var(--ink); }
+  .toast { position:fixed; bottom:1.5rem; right:1.5rem; background:var(--ink); color:#fff; font-size:.7rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; padding:.8rem 1.2rem; z-index:200; max-width:calc(100vw - 3rem); }
   @media print {
-    .no-print { display: none !important; }
-    body { background: white; }
-    .print-section { page-break-inside: avoid; }
+    .no-print { display:none !important; }
+    body { background:#fff; }
+    #app-header { display:none !important; }
+    .print-only { display:block !important; }
+    .card { border:none; padding:0; }
   }
-  .lbl { display:block; font-size:0.65rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:#888884; margin-bottom:0.25rem; }
-  .inp { width:100%; border:1px solid #DDDDDA; padding:0.5rem 0.75rem; font-size:0.875rem; color:#0D0D0D; transition:border-color 0.2s; background:white; }
-  .inp:focus { outline:none; border-color:#0D0D0D; }
 </style>
 </head>
 <body class="min-h-screen">
 
-<!-- ═══ LOCK SCREEN ═══ -->
-<div id="lock-screen" class="fixed inset-0 bg-[#0D0D0D] z-[100] flex items-center justify-center" style="display:flex">
+<!-- LOCK SCREEN -->
+<div id="lock" class="fixed inset-0 bg-[#0D0D0D] z-[100] flex items-center justify-center">
   <div class="w-full max-w-sm mx-4">
     <div class="text-center mb-8">
-      <p class="fd text-3xl tracking-widest text-white mb-1">IRON MIND</p>
-      <p class="text-[#AAAAAA] text-xs tracking-widest uppercase" id="lock-subtitle">Mentoring Progress Tracker</p>
+      <p class="fd text-4xl text-white mb-1">IRON MIND</p>
+      <p class="text-[#AAAAAA] text-xs tracking-widest uppercase" id="lock-sub">Mentoring</p>
     </div>
     <div class="bg-[#141414] border border-white/10 p-6 relative">
       <div class="absolute top-0 left-0 right-0 h-0.5 bg-white"></div>
-      <p class="text-xs font-bold tracking-widest uppercase text-[#AAAAAA] mb-4" id="lock-label">Enter your password to continue</p>
-      <p class="text-xs text-[#444444] mb-3 font-mono">First time: <span class="text-[#AAAAAA]">IronMind2026</span></p>
-      <input id="lock-pw" type="password" placeholder="Password" class="w-full bg-[#0D0D0D] border border-white/15 text-white px-4 py-3 text-sm mb-3 focus:outline-none focus:border-white/40 transition-colors" onkeydown="if(event.key==='Enter')checkPw()">
+      <p class="text-xs font-bold tracking-widest uppercase text-[#AAAAAA] mb-4" id="lock-label">Enter your password</p>
+      <p class="text-xs text-[#555] mb-3 font-mono" id="lock-hint" style="display:none">First time: <span class="text-[#AAAAAA]">IronMind2026</span></p>
+      <input id="lock-pw" type="password" autocomplete="current-password" placeholder="Password" class="w-full bg-[#0D0D0D] border border-white/15 text-white px-4 py-3 text-sm mb-3 focus:outline-none focus:border-white/40" onkeydown="if(event.key==='Enter')checkPw()">
       <p id="lock-err" class="text-xs text-red-400 mb-3" style="display:none">Incorrect password. Please try again.</p>
-      <button onclick="checkPw()" class="w-full bg-white text-black text-xs font-bold tracking-widest uppercase py-3 hover:bg-gray-100 transition-all">Continue</button>
+      <button onclick="checkPw()" class="w-full bg-white text-black text-xs font-bold tracking-widest uppercase py-3 hover:bg-gray-100">Continue</button>
     </div>
-    <p class="text-center text-[#333] text-xs mt-6 tracking-widest uppercase">Develop the Mind. Build the Body.</p>
+    <p class="text-center text-[#444] text-xs mt-6 tracking-widest uppercase">Develop the Mind. Build the Body.</p>
   </div>
 </div>
 
-<!-- ═══ HEADER ═══ -->
-<header class="bg-[#0D0D0D] text-white px-6 py-4 no-print" id="app-header" style="display:none">
-  <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
-    <div>
-      <p class="fd text-2xl tracking-widest">IRON MIND MENTORING</p>
-      <p class="text-[#AAAAAA] text-xs tracking-widest uppercase" id="header-sub">Progress Tracker</p>
+<!-- HEADER -->
+<header id="app-header" class="bg-[#0D0D0D] text-white px-4 md:px-6 pt-4 no-print" style="display:none">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-center justify-between gap-3 pb-3">
+      <div>
+        <p class="fd text-2xl leading-none">IRON MIND MENTORING</p>
+        <p class="text-[#AAAAAA] text-[10px] tracking-widest uppercase mt-1" id="hdr-sub">Develop the Mind. Build the Body.</p>
+      </div>
+      <button onclick="logout()" class="text-[10px] px-3 py-2 border border-white/20 text-[#AAAAAA] font-bold tracking-widest uppercase hover:text-white hover:border-white/50" id="hdr-lock">Lock</button>
     </div>
-    <div class="flex items-center gap-2 flex-wrap" id="header-btns">
-      <button onclick="printReport()" class="text-xs px-4 py-2 bg-white text-black font-bold tracking-widest uppercase hover:bg-gray-100 transition-all">Print Report</button>
-      <button onclick="logout()" class="text-xs px-4 py-2 border border-white/20 text-[#AAAAAA] font-bold tracking-widest uppercase hover:text-white hover:border-white/50 transition-all">Lock</button>
-    </div>
+    <nav class="nav flex gap-5 scroll-x" id="nav"></nav>
   </div>
 </header>
 
-<!-- ═══ GARY VIEW ═══ -->
-<div id="view-gary" style="display:none">
-<div class="max-w-6xl mx-auto px-4 md:px-6 py-8">
+<main id="root"></main>
 
-  <!-- Selectors -->
-  <div class="bg-white border border-[#DDDDDA] p-4 mb-6 flex flex-wrap gap-3 items-end no-print">
-    <div>
-      <label class="lbl">School</label>
-      <select id="g-school" onchange="onSchoolChange()" class="border border-[#DDDDDA] text-sm px-3 py-2 bg-white min-w-48">
-        <option value="">— Select school —</option>
-      </select>
-    </div>
-    <div>
-      <label class="lbl">Student</label>
-      <select id="g-student" onchange="onStudentChange()" class="border border-[#DDDDDA] text-sm px-3 py-2 bg-white min-w-48">
-        <option value="">— Select student —</option>
-      </select>
-    </div>
-    <button onclick="openModal('m-school')" class="border border-[#DDDDDA] text-[#888884] text-xs font-bold tracking-widest uppercase px-4 py-2 hover:border-black hover:text-black transition-all">+ School</button>
-    <button onclick="openModal('m-student')" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-4 py-2 hover:bg-[#333] transition-all">+ Student</button>
-  </div>
-
-  <!-- School overview -->
-  <div id="school-ov" class="mb-6" style="display:none">
-    <div class="bg-white border border-[#DDDDDA] p-5">
-      <p class="lbl mb-3">School Overview</p>
-      <div id="ov-stats" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"></div>
-      <div id="ov-students" class="space-y-2"></div>
-    </div>
-  </div>
-
-  <!-- Student dashboard -->
-  <div id="stu-dash" style="display:none">
-    <!-- Banner -->
-    <div class="bg-[#0D0D0D] text-white p-5 mb-5 flex flex-wrap justify-between items-start gap-4">
-      <div>
-        <p class="text-xs tracking-widest uppercase text-[#AAAAAA] mb-0.5" id="d-school"></p>
-        <h2 class="fd text-3xl tracking-wide" id="d-name"></h2>
-        <p class="text-[#AAAAAA] text-sm mt-1" id="d-meta"></p>
-      </div>
-      <div class="flex gap-6 text-center">
-        <div><p class="text-xs tracking-widest uppercase text-[#AAAAAA] mb-1">Week</p><p class="fd text-4xl" id="d-week">1</p></div>
-        <div><p class="text-xs tracking-widest uppercase text-[#AAAAAA] mb-1">Sessions</p><p class="fd text-4xl" id="d-sess">0</p></div>
-        <div><p class="text-xs tracking-widest uppercase text-[#AAAAAA] mb-1">Check-ins</p><p class="fd text-4xl" id="d-ci">0</p></div>
-      </div>
-    </div>
-
-    <!-- Timeline -->
-    <div class="bg-white border border-[#DDDDDA] p-4 mb-5 no-print">
-      <p class="lbl mb-3">Programme Timeline</p>
-      <div class="flex items-stretch text-center text-[10px]">
-        <div id="tl1" class="flex-1 py-2 bg-[#0D0D0D] text-white"><p class="font-bold">WK 1</p><p class="text-[#AAAAAA]">Baseline</p></div>
-        <div class="w-px bg-[#DDDDDA]"></div>
-        <div id="tl2" class="flex-1 py-2 bg-[#F0F0EB]"><p class="font-bold text-[#888884]">WK 2</p><p class="text-[#AAAAAA]">Sessions</p></div>
-        <div class="w-px bg-[#DDDDDA]"></div>
-        <div id="tl3" class="flex-1 py-2 bg-[#F0F0EB] border-2 border-dashed border-[#DDDDDA]"><p class="font-bold text-[#888884]">WK 3</p><p class="text-[#AAAAAA]">Mid check-in</p></div>
-        <div class="w-px bg-[#DDDDDA]"></div>
-        <div id="tl4" class="flex-1 py-2 bg-[#F0F0EB]"><p class="font-bold text-[#888884]">WK 4</p><p class="text-[#AAAAAA]">Sessions</p></div>
-        <div class="w-px bg-[#DDDDDA]"></div>
-        <div id="tl5" class="flex-1 py-2 bg-[#F0F0EB]"><p class="font-bold text-[#888884]">WK 5</p><p class="text-[#AAAAAA]">Sessions</p></div>
-        <div class="w-px bg-[#DDDDDA]"></div>
-        <div id="tl6" class="flex-1 py-2 bg-[#F0F0EB] border-2 border-dashed border-[#DDDDDA]"><p class="font-bold text-[#888884]">WK 6</p><p class="text-[#AAAAAA]">Final check-in</p></div>
-      </div>
-      <div class="flex gap-3 mt-3 flex-wrap">
-        <button onclick="showLinks('1')" class="bg-white text-black border border-[#0D0D0D] text-xs font-bold tracking-widest uppercase px-4 py-2 hover:bg-[#F0F0EB] transition-all">Send Week 1 Links</button>
-        <button onclick="showLinks('3')" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-4 py-2 hover:bg-[#333] transition-all">Send Week 3 Links</button>
-        <button onclick="showLinks('6')" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-4 py-2 hover:bg-[#333] transition-all">Send Week 6 Links</button>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="flex flex-wrap gap-2 mb-5 no-print">
-      <button onclick="switchTab('metrics')" id="tab-metrics" class="tab-active text-xs font-bold tracking-widest uppercase px-5 py-2">Metrics</button>
-      <button onclick="switchTab('sessions')" id="tab-sessions" class="tab-inactive text-xs font-bold tracking-widest uppercase px-5 py-2">Sessions</button>
-      <button onclick="switchTab('goals')" id="tab-goals" class="tab-inactive text-xs font-bold tracking-widest uppercase px-5 py-2">Goals</button>
-      <button onclick="switchTab('checkins')" id="tab-checkins" class="tab-inactive text-xs font-bold tracking-widest uppercase px-5 py-2">Check-ins</button>
-      <button onclick="switchTab('passwords')" id="tab-passwords" class="tab-inactive text-xs font-bold tracking-widest uppercase px-5 py-2">Passwords</button>
-      <button onclick="switchTab('report')" id="tab-report" class="tab-inactive text-xs font-bold tracking-widest uppercase px-5 py-2">Full Report</button>
-    </div>
-
-    <!-- METRICS -->
-    <div id="panel-metrics">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-        <div class="bg-white border border-[#DDDDDA] p-5">
-          <p class="lbl mb-4">School Measurables — Baseline vs Current</p>
-          <div class="grid grid-cols-2 gap-3" id="metric-inputs"></div>
-        </div>
-        <div class="bg-white border border-[#DDDDDA] p-5">
-          <p class="lbl mb-4">Progress Snapshot</p>
-          <div id="prog-bars" class="space-y-4"></div>
-        </div>
-      </div>
-      <div class="bg-white border border-[#DDDDDA] p-5 mb-5">
-        <p class="lbl mb-3">Check-in Links — Copy and send to each person</p>
-        <div id="quick-links" class="space-y-2"></div>
-      </div>
-      <button onclick="saveMetrics()" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-6 py-3 hover:bg-[#333] transition-all no-print">Save Metrics</button>
-    </div>
-
-    <!-- SESSIONS -->
-    <div id="panel-sessions" style="display:none">
-      <div class="bg-white border border-[#DDDDDA] p-5 mb-4 no-print">
-        <p class="lbl mb-4">Log a Session</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-          <div><label class="lbl">Date</label><input id="s-date" type="date" class="inp"></div>
-          <div><label class="lbl">Type</label>
-            <select id="s-type" class="inp">
-              <option value="1-1">1:1 Mentoring</option>
-              <option value="group">Group Session</option>
-              <option value="assembly">Assembly</option>
-              <option value="parent">Parent Meeting</option>
-              <option value="forum">Open Forum</option>
-              <option value="debrief">Staff Debrief</option>
-            </select>
-          </div>
-          <div><label class="lbl">Engagement (1–5)</label>
-            <select id="s-eng" class="inp">
-              <option value="1">1 — Resistant</option>
-              <option value="2">2 — Passive</option>
-              <option value="3" selected>3 — Present</option>
-              <option value="4">4 — Engaged</option>
-              <option value="5">5 — Fully invested</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-          <div><label class="lbl">Theme / Worksheet</label><input id="s-theme" type="text" placeholder="e.g. Values, Goal setting" class="inp"></div>
-          <div><label class="lbl">Key Observation (shareable with school)</label><input id="s-obs" type="text" placeholder="Non-confidential note" class="inp"></div>
-        </div>
-        <div><label class="lbl">Private Notes (Gary only)</label><textarea id="s-notes" rows="3" placeholder="Confidential — not shared with anyone" class="inp resize-none"></textarea></div>
-        <button onclick="logSession()" class="mt-3 bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-6 py-2 hover:bg-[#333] transition-all">Log Session</button>
-      </div>
-      <div id="sess-log" class="space-y-3"></div>
-    </div>
-
-    <!-- GOALS -->
-    <div id="panel-goals" style="display:none">
-      <div class="bg-white border border-[#DDDDDA] p-5 mb-4 no-print">
-        <p class="lbl mb-4">Add Agreed Goal / Measurable</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-          <div class="md:col-span-2"><label class="lbl">Goal</label><input id="g-txt" type="text" placeholder="e.g. Reduce negative behaviour incidents by 50% over 6 weeks" class="inp"></div>
-          <div><label class="lbl">Category</label>
-            <select id="g-cat" class="inp">
-              <option value="behaviour">Behaviour</option>
-              <option value="attendance">Attendance</option>
-              <option value="academic">Academic</option>
-              <option value="wellbeing">Wellbeing</option>
-              <option value="habit">Habit / Routine</option>
-              <option value="social">Social / Communication</option>
-              <option value="personal">Personal Development</option>
-            </select>
-          </div>
-        </div>
-        <div class="flex gap-4 mb-3 flex-wrap">
-          <label class="flex items-center gap-2 text-sm text-[#888884]"><input type="checkbox" id="g-sch" class="accent-black"> Agreed with School</label>
-          <label class="flex items-center gap-2 text-sm text-[#888884]"><input type="checkbox" id="g-par" class="accent-black"> Parent</label>
-          <label class="flex items-center gap-2 text-sm text-[#888884]"><input type="checkbox" id="g-stu" class="accent-black"> Student</label>
-        </div>
-        <button onclick="addGoal()" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-6 py-2 hover:bg-[#333] transition-all">Add Goal</button>
-      </div>
-      <div id="goals-list" class="space-y-3"></div>
-    </div>
-
-    <!-- CHECK-INS -->
-    <div id="panel-checkins" style="display:none">
-      <div id="ci-display" class="space-y-6"></div>
-    </div>
-
-    <!-- PASSWORDS -->
-    <div id="panel-passwords" style="display:none">
-      <div class="bg-white border border-[#DDDDDA] p-5 mb-4">
-        <div class="absolute top-0 left-0 right-0 h-0.5 bg-[#0D0D0D]" style="position:relative"></div>
-        <p class="lbl mb-1">Access Passwords for This Student</p>
-        <p class="text-sm text-[#888884] mb-5">Set a unique password for each person. Share each one individually — they can only access their own form, not Gary's view or each other's.</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-          <div>
-            <label class="lbl">Student Password</label>
-            <p class="text-xs text-[#888884] mb-2">Share with the student. They access the student check-in form only.</p>
-            <div class="flex gap-2">
-              <input id="pw-student" type="text" placeholder="e.g. James2026" class="inp flex-1">
-              <button onclick="savePw('student')" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-3 py-2 hover:bg-[#333] transition-all whitespace-nowrap">Save</button>
-            </div>
-          </div>
-          <div>
-            <label class="lbl">Parent Password</label>
-            <p class="text-xs text-[#888884] mb-2">Share with the parent or guardian. Parent check-in form only.</p>
-            <div class="flex gap-2">
-              <input id="pw-parent" type="text" placeholder="e.g. Smith2026" class="inp flex-1">
-              <button onclick="savePw('parent')" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-3 py-2 hover:bg-[#333] transition-all whitespace-nowrap">Save</button>
-            </div>
-          </div>
-          <div>
-            <label class="lbl">Staff Password</label>
-            <p class="text-xs text-[#888884] mb-2">Share with HOY or pastoral lead. Staff observation form only.</p>
-            <div class="flex gap-2">
-              <input id="pw-staff" type="text" placeholder="e.g. GWA2026" class="inp flex-1">
-              <button onclick="savePw('staff')" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-3 py-2 hover:bg-[#333] transition-all whitespace-nowrap">Save</button>
-            </div>
-          </div>
-        </div>
-        <div class="bg-[#F0F0EB] border border-[#DDDDDA] p-4">
-          <p class="text-xs font-bold tracking-widest uppercase text-[#888884] mb-2">Current Password Status</p>
-          <div id="pw-status" class="grid grid-cols-3 gap-3"></div>
-        </div>
-      </div>
-      <div class="bg-white border border-[#DDDDDA] p-5">
-        <p class="lbl mb-3">Gary's Master Password</p>
-        <p class="text-sm text-[#888884] mb-4">Change your own password here. You will need to re-enter it next time you open the tracker.</p>
-        <div class="flex gap-3 items-end max-w-sm">
-          <div class="flex-1"><label class="lbl">New Password</label><input id="pw-gary-new" type="text" placeholder="New password" class="inp"></div>
-          <button onclick="changeGaryPw()" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-4 py-2 hover:bg-[#333] transition-all whitespace-nowrap">Update</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- REPORT -->
-    <div id="panel-report" style="display:none">
-      <div id="report-out" class="bg-white border border-[#DDDDDA]"></div>
-    </div>
-
-  </div>
-</div>
-</div>
-
-<!-- ═══ STUDENT VIEW ═══ -->
-<div id="view-student" style="display:none">
-<div class="max-w-2xl mx-auto px-4 py-10">
-  <div class="bg-white border border-[#DDDDDA] relative overflow-hidden">
+<!-- MODAL -->
+<div id="modal" class="fixed inset-0 bg-black/50 z-[90] items-center justify-center no-print p-4" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="bg-white w-full max-w-lg relative overflow-y-auto" style="max-height:92vh">
     <div class="absolute top-0 left-0 right-0 h-1 bg-[#0D0D0D]"></div>
-    <div class="bg-[#0D0D0D] px-6 py-5">
-      <p class="fd text-2xl tracking-widest text-white">IRON MIND MENTORING</p>
-      <p class="text-[#AAAAAA] text-xs tracking-widest uppercase mt-1" id="stu-title">Student Check-In — Week 1 (Baseline)</p>
-    </div>
-    <div class="p-6">
-      <p class="text-sm text-[#888884] italic mb-6 leading-relaxed fs">"This is your honest check-in. Nobody else sees these answers unless you choose to share them. Take your time."</p>
-      <p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">How Are You Feeling Right Now? (1 = low, 10 = strong)</p>
-      <div id="stu-scales" class="space-y-4 mb-6"></div>
-      <p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">In Your Own Words</p>
-      <div class="space-y-4">
-        <div><label class="lbl">What's gone well since we started?</label><textarea id="sq1" rows="3" placeholder="Be specific — what actually happened or changed?" class="inp resize-none"></textarea></div>
-        <div><label class="lbl">What progress have you made toward your goal?</label><textarea id="sq2" rows="3" placeholder="Even small steps count." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">What have you enjoyed most about the sessions so far?</label><textarea id="sq3" rows="3" placeholder="Honest answer." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">What has been the hardest part?</label><textarea id="sq4" rows="3" placeholder="Nothing is wrong to say here." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">What else do you want to achieve before we finish?</label><textarea id="sq5" rows="3" placeholder="Think big or think small — both are fine." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">Anything you want Gary to know before the next session?</label><textarea id="sq6" rows="2" placeholder="Optional." class="inp resize-none"></textarea></div>
-      </div>
-      <button onclick="submitForm('student')" class="w-full mt-6 bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase py-3 hover:bg-[#333] transition-all">Submit Check-In</button>
-      <div id="stu-ok" style="display:none" class="mt-4 bg-[#F0F0EB] border border-[#DDDDDA] p-4 text-center">
-        <p class="fd text-2xl tracking-wide mb-1">SUBMITTED.</p>
-        <p class="text-sm text-[#888884]">Gary will review this before your next session. Good work showing up.</p>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ═══ PARENT VIEW ═══ -->
-<div id="view-parent" style="display:none">
-<div class="max-w-2xl mx-auto px-4 py-10">
-  <div class="bg-white border border-[#DDDDDA] relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-[#0D0D0D]"></div>
-    <div class="bg-[#0D0D0D] px-6 py-5">
-      <p class="fd text-2xl tracking-widest text-white">IRON MIND MENTORING</p>
-      <p class="text-[#AAAAAA] text-xs tracking-widest uppercase mt-1" id="par-title">Parent Check-In — Week 3</p>
-    </div>
-    <div class="p-6">
-      <p class="text-sm text-[#888884] italic mb-6 leading-relaxed" id="par-intro">Thank you for taking a few minutes to share what you've observed at home. Your perspective is an important part of how we understand your son's progress.</p>
-      <div><label class="lbl">Your name (optional)</label><input id="par-name" type="text" placeholder="Optional" class="inp mb-4"></div>
-      <p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">Rate What You've Noticed at Home (1 = little/no change, 10 = significant positive change)</p>
-      <div id="par-scales" class="space-y-4 mb-6"></div>
-      <p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">In Your Own Words</p>
-      <div class="space-y-4">
-        <div><label class="lbl">What positive changes have you noticed at home?</label><textarea id="pq1" rows="3" placeholder="Behaviour, communication, attitude, effort..." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">What are you still concerned about?</label><textarea id="pq2" rows="3" placeholder="Be honest — this helps Gary tailor the sessions." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">How has your son spoken about the sessions?</label><textarea id="pq3" rows="2" placeholder="Has he mentioned anything? Positive or negative?" class="inp resize-none"></textarea></div>
-        <div><label class="lbl">What would you like the second half of the programme to focus on?</label><textarea id="pq4" rows="3" placeholder="Areas, goals, challenges you'd like addressed..." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">Anything else Gary should know?</label><textarea id="pq5" rows="2" placeholder="Optional." class="inp resize-none"></textarea></div>
-      </div>
-      <button onclick="submitForm('parent')" class="w-full mt-6 bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase py-3 hover:bg-[#333] transition-all">Submit Check-In</button>
-      <div id="par-ok" style="display:none" class="mt-4 bg-[#F0F0EB] border border-[#DDDDDA] p-4 text-center">
-        <p class="fd text-2xl tracking-wide mb-1">THANK YOU.</p>
-        <p class="text-sm text-[#888884]">Your observations have been saved. Gary will review them before the next session.</p>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ═══ STAFF VIEW ═══ -->
-<div id="view-staff" style="display:none">
-<div class="max-w-2xl mx-auto px-4 py-10">
-  <div class="bg-white border border-[#DDDDDA] relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-[#0D0D0D]"></div>
-    <div class="bg-[#0D0D0D] px-6 py-5">
-      <p class="fd text-2xl tracking-widest text-white">IRON MIND MENTORING</p>
-      <p class="text-[#AAAAAA] text-xs tracking-widest uppercase mt-1" id="stf-title">Staff Check-In — Week 3</p>
-    </div>
-    <div class="p-6">
-      <p class="text-sm text-[#888884] italic mb-6 leading-relaxed">Thank you for sharing your observations. Your perspective helps Gary understand what is — and isn't — translating from sessions into school life.</p>
-      <div class="grid grid-cols-2 gap-4 mb-4">
-        <div><label class="lbl">Your Name and Role</label><input id="stf-name" type="text" placeholder="e.g. Mr Ahmed, Head of Year 8" class="inp"></div>
-        <div><label class="lbl">Date</label><input id="stf-date" type="date" class="inp"></div>
-      </div>
-      <p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">Rate What You've Observed in School (1 = little/no change, 10 = significant positive change)</p>
-      <div id="stf-scales" class="space-y-4 mb-6"></div>
-      <p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">In Your Own Words</p>
-      <div class="space-y-4">
-        <div><label class="lbl">What improvements have you observed?</label><textarea id="tfq1" rows="3" placeholder="Behaviour in class, with peers, with staff, attitude, effort..." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">What areas are still of concern?</label><textarea id="tfq2" rows="3" placeholder="Be specific — this shapes the second half of the programme." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">Any incidents or significant events Gary should know about?</label><textarea id="tfq3" rows="2" placeholder="Anything since the last session..." class="inp resize-none"></textarea></div>
-        <div><label class="lbl">What would you like the programme to prioritise in the second half?</label><textarea id="tfq4" rows="3" placeholder="Academic engagement, peer relationships, communication with staff..." class="inp resize-none"></textarea></div>
-      </div>
-      <button onclick="submitForm('staff')" class="w-full mt-6 bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase py-3 hover:bg-[#333] transition-all">Submit Observation</button>
-      <div id="stf-ok" style="display:none" class="mt-4 bg-[#F0F0EB] border border-[#DDDDDA] p-4 text-center">
-        <p class="fd text-2xl tracking-wide mb-1">SUBMITTED.</p>
-        <p class="text-sm text-[#888884]">Gary will review your observation before the next session. Thank you.</p>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ═══ MODALS ═══ -->
-<div id="m-school" class="fixed inset-0 bg-black/50 z-[90] flex items-center justify-center no-print" style="display:none" onclick="if(event.target===this)closeModal('m-school')">
-  <div class="bg-white p-8 max-w-md w-full mx-4 relative">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-[#0D0D0D]"></div>
-    <h3 class="fd text-2xl tracking-wide mb-5">ADD SCHOOL</h3>
-    <div class="space-y-3 mb-5">
-      <div><label class="lbl">School Name</label><input id="ns-name" type="text" class="inp"></div>
-      <div><label class="lbl">Pricing Model</label>
-        <select id="ns-model" class="inp">
-          <option value="a">Model A — Monthly Retainer (20,000 AED)</option>
-          <option value="b">Model B — Per Student (1,000 AED/cycle)</option>
-          <option value="c">Model C — Hybrid</option>
-        </select>
-      </div>
-      <div><label class="lbl">HOY / Pastoral Lead</label><input id="ns-hoy" type="text" placeholder="Name and contact" class="inp"></div>
-    </div>
-    <div class="flex gap-3">
-      <button onclick="addSchool()" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-6 py-2 hover:bg-[#333] transition-all">Save</button>
-      <button onclick="closeModal('m-school')" class="border border-[#DDDDDA] text-[#888884] text-xs font-bold tracking-widest uppercase px-4 py-2">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="m-student" class="fixed inset-0 bg-black/50 z-[90] flex items-center justify-center no-print" style="display:none" onclick="if(event.target===this)closeModal('m-student')">
-  <div class="bg-white p-8 max-w-lg w-full mx-4 relative overflow-y-auto max-h-screen">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-[#0D0D0D]"></div>
-    <h3 class="fd text-2xl tracking-wide mb-5">ADD STUDENT</h3>
-    <div class="grid grid-cols-2 gap-4 mb-5">
-      <div><label class="lbl">First Name</label><input id="nu-first" type="text" class="inp"></div>
-      <div><label class="lbl">Last Initial</label><input id="nu-last" type="text" maxlength="1" placeholder="e.g. M" class="inp"></div>
-      <div><label class="lbl">Year Group</label><input id="nu-year" type="text" placeholder="e.g. Year 8" class="inp"></div>
-      <div><label class="lbl">Start Date</label><input id="nu-date" type="date" class="inp"></div>
-      <div class="col-span-2"><label class="lbl">Referral Reason (private)</label><textarea id="nu-reason" rows="2" class="inp resize-none"></textarea></div>
-      <div><label class="lbl">HOY / Pastoral Lead</label><input id="nu-hoy" type="text" class="inp"></div>
-      <div><label class="lbl">ADHD / SEN</label>
-        <select id="nu-sen" class="inp">
-          <option value="none">None noted</option>
-          <option value="adhd_dx">ADHD — Diagnosed</option>
-          <option value="adhd_sus">ADHD — Suspected</option>
-          <option value="other">Other SEN</option>
-        </select>
-      </div>
-    </div>
-    <div class="border-t border-[#DDDDDA] pt-4 mb-5">
-      <p class="lbl mb-3">Access Passwords (set now or later in the Passwords tab)</p>
-      <div class="grid grid-cols-3 gap-3">
-        <div><label class="lbl">Student PW</label><input id="nu-pw-s" type="text" placeholder="e.g. James26" class="inp"></div>
-        <div><label class="lbl">Parent PW</label><input id="nu-pw-p" type="text" placeholder="e.g. Smith26" class="inp"></div>
-        <div><label class="lbl">Staff PW</label><input id="nu-pw-t" type="text" placeholder="e.g. GWA26" class="inp"></div>
-      </div>
-    </div>
-    <div class="flex gap-3">
-      <button onclick="addStudent()" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-6 py-2 hover:bg-[#333] transition-all">Save</button>
-      <button onclick="closeModal('m-student')" class="border border-[#DDDDDA] text-[#888884] text-xs font-bold tracking-widest uppercase px-4 py-2">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div id="m-links" class="fixed inset-0 bg-black/50 z-[90] flex items-center justify-center no-print" style="display:none" onclick="if(event.target===this)closeModal('m-links')">
-  <div class="bg-white p-8 max-w-lg w-full mx-4 relative">
-    <div class="absolute top-0 left-0 right-0 h-1 bg-[#0D0D0D]"></div>
-    <h3 class="fd text-2xl tracking-wide mb-2" id="links-hdr">WEEK 3 CHECK-IN LINKS</h3>
-    <p class="text-sm text-[#888884] mb-5">Copy and send each link with their password. They can only access their own form.</p>
-    <div id="links-list" class="space-y-4"></div>
-    <button onclick="closeModal('m-links')" class="mt-5 border border-[#DDDDDA] text-[#888884] text-xs font-bold tracking-widest uppercase px-4 py-2">Close</button>
+    <div class="p-6 md:p-8" id="modal-body"></div>
   </div>
 </div>
 
 <script>
-// ════════════════════════════════════════════════
-// PASSWORDS & AUTH
-// ════════════════════════════════════════════════
-const GARY_PW_KEY = 'imm_gary_pw';
-const DEFAULT_GARY_PW = 'IronMind2026';
+// ═══════════════════════════════════════════════════════════════
+// PROGRAMME LIBRARY — taken from the Iron Mind journals & decks
+// ═══════════════════════════════════════════════════════════════
+const OWN_IT_WEEKS = [
+  {t:'SEE IT',    q:'Where am I, honestly?',              f:'Map your time, energy, people and strengths. Rate where you are now.', ch:'The Honest Hold', cd:'Plank. When your head says stop, notice it — then hold 20 more seconds.'},
+  {t:'FACE IT',   q:'What am I avoiding, and why?',       f:'Fear compass, stretch edge, the voice in your head.', ch:'Weak Side', cd:'15 minutes practising the part of your thing you are worst at — somewhere people can see you.'},
+  {t:'CHOOSE IT', q:'Who am I — and who am I copying?',   f:'Identity, influence and the people you choose.', ch:'Pack vs Solo', cd:'Do the same task with the group and alone. Measure both times.'},
+  {t:'BUILD IT',  q:'What do I do every day?',            f:'Daily non-negotiables, routines and habits. Revisit the Vision page.', ch:'', cd:''},
+  {t:'HOLD IT',   q:'What happens when it gets hard?',    f:'Setbacks, pressure and staying the course.', ch:'', cd:''},
+  {t:'OWN IT',    q:'What am I taking with me?',          f:'Re-rate, revisit the Vision page and plan what comes next.', ch:'', cd:''},
+];
+const PROGS = {
+  ownit_boys:  { name:'OWN IT — Boys',  short:'OWN IT', who:'Teens · 6-week transformation', dims:['Confidence','Discipline','Focus','Energy','Resilience','Organisation','Ownership','Communication'], wheel:true, weeks:OWN_IT_WEEKS },
+  ownit_girls: { name:'OWN IT — Girls', short:'OWN IT', who:'Teens · 6-week transformation', dims:['Confidence','Discipline','Focus','Energy','Resilience','Organisation','Ownership','Communication'], wheel:true, weeks:OWN_IT_WEEKS },
+  startstrong: { name:'START STRONG — Iron Mind Academy', short:'START STRONG', who:'Ages 10–12 · introductory journal', dims:['Confidence','Focus','Habits','Energy','Relationships','Independence'], wheel:false, weeks:[
+    {t:'KNOW YOUR GAME',  q:'Who am I?',                   f:'Who you are, what gives you energy and who is in your corner.', ch:'', cd:''},
+    {t:'KNOW YOUR GAME',  q:'Where am I now?',             f:'Rate yourself today. Strengths, energy and your corner.', ch:'', cd:''},
+    {t:'TRAIN YOUR MIND', q:'How do I handle my thoughts?', f:'Thoughts vs facts, focus, pressure and quick resets.', ch:'', cd:''},
+    {t:'BUILD YOUR BASE', q:'What do I do every day?',     f:'Routines, tiny habits, courage.', ch:'', cd:''},
+    {t:'BUILD YOUR BASE', q:'How do I bounce back?',       f:'Bouncing back when it goes wrong.', ch:'', cd:''},
+    {t:'STEP UP',         q:'Who do I want to be?',        f:'Choices, communication, boundaries and leadership. Build your Academy toolkit.', ch:'', cd:''},
+  ]},
+  performit: { name:'PERFORM IT — Sports Psychology', short:'PERFORM IT', who:'Athletes · 6-week sports psychology journal', dims:['Commitment','Communication','Concentration','Control','Confidence'], wheel:false, habits:true, weeks:[
+    {t:'KNOW IT',    q:'Understand your mind',  f:'The 5 C’s baseline, athlete profile, at my best / not, why I play, the athlete iceberg.', ch:'', cd:''},
+    {t:'CONTROL IT', q:'Control the moment',    f:'Reactions, emotion and the 10-second reset.', ch:'', cd:''},
+    {t:'FOCUS IT',   q:'Where attention goes',  f:'Cue words and attention under distraction.', ch:'', cd:''},
+    {t:'BUILD IT',   q:'Practise the process',  f:'Pre-performance routine and process goals.', ch:'', cd:''},
+    {t:'TRAIN IT',   q:'Pressure on purpose',   f:'Training under deliberate pressure.', ch:'', cd:''},
+    {t:'PERFORM IT', q:'Take it further',       f:'Re-rate the 5 C’s and build a personal performance blueprint.', ch:'', cd:''},
+  ]},
+};
+const PERFORM_HABITS = ['Fill in my daily check-in','Bed on time before training / competition','Use my cue word in training, not just games','Do my pre-performance routine','Reset after a mistake (10-second reset)','Ask my coach one useful question','Fuel and hydrate before I train','Notice one thing I did well today','Review a performance without judging myself','Prepare my kit / environment early','Do one rep when motivation is low','Write one way I handled pressure better'];
+const WHEEL = ['Physical','School','Personal growth','Family','Friends','Career / future','Health','Hobby / sport'];
+const TOOLS = [
+  {k:'sigh',   n:'Physiological Sigh', d:'Double inhale, long exhale. The fastest known nervous-system reset.'},
+  {k:'box',    n:'Box Breathing',      d:'In 4, hold 4, out 4, hold 4. Used before high-stakes moments.'},
+  {k:'switch', n:'The Switch',         d:'A specific, physical, repeatable trigger that activates the performance identity.'},
+  {k:'cue',    n:'Process Cue',        d:'One word or focus point that replaces outcome-anxiety with a clear next action.'},
+  {k:'comma',  n:'The Comma',          d:'A miss is not a full stop. The reset that stops one error becoming a spiral.'},
+];
+const PHASES = [{k:'b',l:'Baseline',w:'1'},{k:'m',l:'Week 3',w:'3'},{k:'f',l:'Week 6',w:'6'}];
+const PHASE_COL = {b:'#C4C4BE', m:'#7A7A75', f:'#0D0D0D'};
+const SESSION_TYPES = {'1-1':'1:1 Mentoring','gym':'1:1 Gym / Physical',group:'Group Session',team:'Team Session',assembly:'Assembly',parent:'Parent Meeting',forum:'Open Forum',debrief:'Staff Debrief'};
+const ENG = ['','Resistant','Passive','Present','Engaged','Fully invested'];
+const MODELS = {a:'Model A — Monthly retainer (20,000 AED)', b:'Model B — Per student (1,000 AED / cycle)', c:'Model C — Hybrid', p:'Private 1:1'};
+const SEN = {none:'None noted',adhd_dx:'ADHD — Diagnosed',adhd_sus:'ADHD — Suspected',other:'Other SEN'};
 
-function getGaryPw() { return localStorage.getItem(GARY_PW_KEY) || DEFAULT_GARY_PW; }
+const PAR_SCALES = ['Switched on at home','Communication with family','Motivation and effort at school','Cooperation and attitude'];
+const STF_SCALES = ['Behaviour in school','Engagement in lessons','Relationships with peers','Relationships with staff'];
+const Q = {
+  student: {
+    '1': [['What brought you here?','Be honest — there are no wrong answers.'],['What do you most want to change?','School, home, sport, or how you feel.'],["What are you good at that people don't always notice?","Don't be modest."],['What does a good week look like for you?','Describe it — what would it feel like?'],['What do you want Gary to know about you?','Anything at all — this is just for Gary.'],['Anything else on your mind?','Optional.']],
+    'x': [["What's gone well since we started?",'Be specific — what actually happened or changed?'],['What progress have you made toward your goal?','Even small steps count.'],['What have you enjoyed most about the sessions?','Honest answer.'],['What has been the hardest part?','Nothing is wrong to say here.'],['What else do you want to achieve before we finish?','Think big or think small.'],['Anything you want Gary to know before the next session?','Optional.']],
+  },
+  parent: {
+    '1': [['What has prompted you to look for support now?','What has been most difficult recently?'],['What does a good week look like for {n}?','At home, at school, with friendships…'],['What have you already tried?','Counselling, school support, conversations…'],['What would success look like at the end of the programme?','What would you like to see change?'],['Anything Gary should know before the first session?','Anything that would help Gary understand {n}.']],
+    'x': [['What positive changes have you noticed at home?','Behaviour, communication, attitude, effort…'],['What are you still concerned about?','Be honest — this helps Gary tailor the sessions.'],['How has {n} spoken about the sessions?','Positive or negative?'],['What would you like the next stage to focus on?','Areas, goals, challenges…'],['Anything else Gary should know?','Optional.']],
+  },
+  staff: {
+    '1': [['What prompted the referral?','What has led to this referral?'],['What does {n} struggle with most?','Behaviour, engagement, relationships, attendance…'],["What are {n}'s strengths?",'What do they respond well to?'],['What would a positive change look like?','From your perspective.']],
+    'x': [['What improvements have you observed?','In class, with peers, with staff, attitude, effort…'],['What areas are still of concern?','Be specific.'],['Any incidents or significant events Gary should know about?','Anything since the last session…'],['What should the programme prioritise next?','Academic engagement, peers, communication with staff…']],
+  },
+};
 
-function checkPw() {
-  const pw = (document.getElementById('lock-pw').value || '').trim();
-  const err = document.getElementById('lock-err');
-
-  if (!pw) return;
-
-  // Always read Gary password fresh from localStorage
-  const garyPw = localStorage.getItem('imm_gary_pw') || 'IronMind2026';
-
-  if (pw === garyPw) {
-    unlock('gary');
-    return;
-  }
-
-  // For student/parent/staff links — read from localStorage directly
-  const view = sessionStorage.getItem('imm_view') || 'gary';
-  const sc = sessionStorage.getItem('imm_sc');
-  const si = sessionStorage.getItem('imm_si');
-
-  if (sc && si !== null && si !== '') {
-    try {
-      const raw = localStorage.getItem('imm4');
-      if (raw) {
-        const data = JSON.parse(raw);
-        const st = data.schools && data.schools[sc] && data.schools[sc].students
-          ? data.schools[sc].students[parseInt(si)]
-          : null;
-        if (st && st.passwords) {
-          if (view === 'student' && pw === (st.passwords.student || '')) { unlock('student'); return; }
-          if (view === 'parent'  && pw === (st.passwords.parent  || '')) { unlock('parent');  return; }
-          if (view === 'staff'   && pw === (st.passwords.staff   || '')) { unlock('staff');   return; }
-        }
-      }
-    } catch(e) {}
-  }
-
-  // Wrong
-  err.style.display = 'block';
-  document.getElementById('lock-pw').value = '';
-  document.getElementById('lock-pw').focus();
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => new Date().toISOString().split('T')[0];
+const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+const fmtDate = d => { if (!d) return '—'; const x = new Date(d); return isNaN(x) ? d : x.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}); };
+function hash(str) { // cyrb53 — link fingerprint, not strong security
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) { const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
-
-function unlock(view) {
-  // Hide lock screen
-  var ls = document.getElementById('lock-screen');
-  ls.style.display = 'none';
-
-  // Show header
-  var hdr = document.getElementById('app-header');
-  hdr.style.display = 'block';
-
-  sessionStorage.setItem('imm_unlocked', view);
-
-  if (view === 'gary') {
-    // Hide all views first
-    ['gary','student','parent','staff'].forEach(function(v) {
-      var el = document.getElementById('view-' + v);
-      if (el) el.style.display = 'none';
-    });
-    document.getElementById('view-gary').style.display = 'block';
-    document.getElementById('header-sub').textContent = "Gary's View — Full Access";
-    load();
-    buildSchoolSel();
-  } else {
-    ['gary','student','parent','staff'].forEach(function(v) {
-      var el = document.getElementById('view-' + v);
-      if (el) el.style.display = 'none';
-    });
-    document.getElementById('view-' + view).style.display = 'block';
-    var labels = {student:'Student Check-In',parent:'Parent Check-In',staff:'Staff Check-In'};
-    document.getElementById('header-sub').textContent = labels[view];
-    document.getElementById('header-btns').innerHTML = '<button onclick="logout()" class="text-xs px-4 py-2 border border-white/20 text-[#AAAAAA] font-bold tracking-widest uppercase hover:text-white transition-all">Done</button>';
-  }
+const b64e = o => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d = s => JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')))));
+function toast(msg) { const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 2600); }
+function copyText(t) {
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('Copied'))
+    .catch(() => { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('Copied'); });
 }
+function openModal(html) { $('modal-body').innerHTML = html; $('modal').style.display = 'flex'; }
+function closeModal() { $('modal').style.display = 'none'; }
+const num = v => (v === '' || v == null || isNaN(parseFloat(v))) ? null : parseFloat(v);
+function getP(o, path) { return path.split('.').reduce((a, k) => a == null ? a : a[k], o); }
+function setP(o, path, v) { const ks = path.split('.'); const last = ks.pop(); const t = ks.reduce((a, k) => (a[k] ??= {}), o); t[last] = v; }
 
-function logout() {
-  sessionStorage.removeItem('imm_unlocked');
-  document.getElementById('lock-screen').style.display = 'flex';
-  document.getElementById('app-header').style.display = 'none';
-  ['gary','student','parent','staff'].forEach(function(v) {
-    var el = document.getElementById('view-' + v);
-    if (el) el.style.display = 'none';
-  });
-  document.getElementById('lock-pw').value = '';
-  document.getElementById('lock-err').style.display = 'none';
+// ═══════════════════════════════════════════════════════════════
+// STATE — localStorage (migrates the previous tracker's data)
+// ═══════════════════════════════════════════════════════════════
+const KEY = 'imm5', OLD_KEY = 'imm4', PW_KEY = 'imm_gary_pw', DEFAULT_PW = 'IronMind2026';
+let S = null;
+const UI = { page:'dash', sc:null, si:null, tab:'overview' };
+
+function blankStudent(o = {}) {
+  return Object.assign({
+    id: uid(), firstName:'', lastI:'', yearGroup:'', startDate:today(), referral:'', hoy:'', sen:'none',
+    programme:'ownit_boys', target:24, status:'active',
+    passwords:{student:'',parent:'',staff:''}, sessions:[], checkins:[], goals:[],
+    metrics:{bb:'',ba:'',ab:'',aa:'',eb:'',ea:''},
+    mental:{b:{},m:{},f:{}}, wheel:{b:{},f:{}},
+    physical:[{name:'Plank hold',unit:'sec',lower:false,b:'',m:'',f:''},{name:'Push-ups (max)',unit:'reps',lower:false,b:'',m:'',f:''}],
+    challenges:{}, daily:Array(42).fill(0), habits:{}, toolkit:{tools:{}, trigger:'', cue:'', identity:''},
+    assessment:'',
+  }, o);
 }
-
-function changeGaryPw() {
-  const np = document.getElementById('pw-gary-new').value.trim();
-  if (!np) { alert('Enter a new password.'); return; }
-  localStorage.setItem(GARY_PW_KEY, np);
-  document.getElementById('pw-gary-new').value = '';
-  toast('Gary\'s password updated');
+function normStudent(st) {
+  const b = blankStudent();
+  for (const k in b) if (st[k] === undefined) st[k] = b[k];
+  st.passwords = Object.assign({student:'',parent:'',staff:''}, st.passwords || {});
+  st.mental = Object.assign({b:{},m:{},f:{}}, st.mental); st.wheel = Object.assign({b:{},f:{}}, st.wheel);
+  st.toolkit = Object.assign({tools:{},trigger:'',cue:'',identity:''}, st.toolkit);
+  if (!Array.isArray(st.daily) || st.daily.length !== 42) st.daily = Array(42).fill(0);
+  if (!PROGS[st.programme]) st.programme = 'ownit_boys';
+  return st;
 }
-
-function savePw(type) {
-  const st = stu(); if (!st) return;
-  if (!st.passwords) st.passwords = {};
-  st.passwords[type] = document.getElementById('pw-' + type).value.trim();
-  save(); renderPwStatus(); toast('Password saved');
-}
-
-function renderPwStatus() {
-  const st = stu(); if (!st) return;
-  const pw = st.passwords || {};
-  document.getElementById('pw-status').innerHTML = ['student','parent','staff'].map(t => {
-    const set = pw[t] ? true : false;
-    return `<div class="text-center p-3 bg-white border border-[#DDDDDA]">
-      <p class="lbl mb-1">${t}</p>
-      <p class="text-sm font-bold ${set?'text-green-600':'text-[#888884]'}">${set ? '✓ Set' : '— Not set'}</p>
-      ${set ? `<p class="text-xs text-[#888884] mt-1 font-mono">${pw[t]}</p>` : ''}
-    </div>`;
-  }).join('');
-  // Also pre-fill inputs
-  ['student','parent','staff'].forEach(t => {
-    const el = document.getElementById('pw-' + t);
-    if (el) el.value = pw[t] || '';
-  });
-}
-
-// ════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════
-const STU_SCALES = ['Overall wellbeing this week','Motivation and drive','Confidence in myself','Clarity of direction and purpose'];
-const PAR_SCALES = ['Overall change at home','Communication with family','Motivation and effort at school','Cooperation and attitude'];
-const STF_SCALES = ['Behaviour change observed','Engagement in school','Relationship with peers','Relationship with staff'];
-
-let S = { schools: {} };
-
 function load() {
-  try { const d = localStorage.getItem('imm4'); if (d) S = JSON.parse(d); } catch(e) {}
-  const defs = [
-    {k:'gems_wac',n:'GEMS World Academy',m:'a'},
-    {k:'gems_ws', n:'GEMS Wellington School',m:'a'},
-    {k:'gems_dp', n:'GEMS Dubai Primary',m:'b'},
-    {k:'repton',  n:'Repton School Dubai',m:'c'},
-    {k:'hartland',n:'Hartland International',m:'b'},
-  ];
-  defs.forEach(d => { if (!S.schools[d.k]) S.schools[d.k] = {name:d.n,model:d.m,hoy:'',students:[]}; });
-}
-
-function save() { localStorage.setItem('imm4', JSON.stringify(S)); }
-function stu() { if (S.cs == null || !S.csc) return null; return S.schools[S.csc]?.students?.[S.cs] || null; }
-
-// ════════════════════════════════════════════════
-// UI HELPERS
-// ════════════════════════════════════════════════
-function show(id) { const el = document.getElementById(id); if(el) el.style.display = 'block'; }
-function hide(id) { const el = document.getElementById(id); if(el) el.style.display = 'none'; }
-function openModal(id) {
-  ['m-school','m-student','m-links'].forEach(function(m) {
-    document.getElementById(m).style.display = 'none';
-  });
-  document.getElementById(id).style.display = 'flex';
-}
-function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
-}
-function toast(msg) {
-  const el = document.createElement('div');
-  el.className = 'fixed bottom-6 right-6 bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-5 py-3 z-50';
-  el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 2500);
-}
-function copyText(t) { navigator.clipboard.writeText(t).then(() => toast('Copied')); }
-function printReport() { switchTab('report'); setTimeout(() => window.print(), 400); }
-
-// ════════════════════════════════════════════════
-// SCHOOLS
-// ════════════════════════════════════════════════
-function buildSchoolSel() {
-  const sel = document.getElementById('g-school');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">— Select school —</option>';
-  Object.entries(S.schools).forEach(([k,sc]) => {
-    const o = document.createElement('option'); o.value = k; o.textContent = sc.name; sel.appendChild(o);
-  });
-  if (cur) sel.value = cur;
-}
-
-function addSchool() {
-  const name = document.getElementById('ns-name').value.trim(); if (!name) return;
-  const key = name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'') + '_' + Date.now();
-  S.schools[key] = {name, model:document.getElementById('ns-model').value, hoy:document.getElementById('ns-hoy').value.trim(), students:[]};
-  save(); buildSchoolSel(); closeModal('m-school');
-}
-
-function onSchoolChange() {
-  const k = document.getElementById('g-school').value;
-  S.csc = k || null; S.cs = null;
-  document.getElementById('stu-dash').style.display = 'none';
-  if (!k) { document.getElementById('school-ov').style.display = 'none'; return; }
-  buildStudentSel(); renderSchoolOv(); document.getElementById('school-ov').style.display = 'block';
-}
-
-function renderSchoolOv() {
-  const sc = S.schools[S.csc]; if (!sc) return;
-  const models = {a:'Model A',b:'Model B',c:'Model C'};
-  const ts = sc.students.reduce((a,s) => a+(s.sessions||[]).length, 0);
-  const tc = sc.students.reduce((a,s) => a+(s.checkins||[]).length, 0);
-  document.getElementById('ov-stats').innerHTML = `
-    <div class="bg-[#F8F8F5] border border-[#DDDDDA] p-4"><p class="lbl mb-1">Students</p><p class="fd text-3xl">${sc.students.length}</p></div>
-    <div class="bg-[#F8F8F5] border border-[#DDDDDA] p-4"><p class="lbl mb-1">Sessions</p><p class="fd text-3xl">${ts}</p></div>
-    <div class="bg-[#F8F8F5] border border-[#DDDDDA] p-4"><p class="lbl mb-1">Check-ins</p><p class="fd text-3xl">${tc}</p></div>
-    <div class="bg-[#F8F8F5] border border-[#DDDDDA] p-4"><p class="lbl mb-1">Model</p><p class="text-sm font-bold mt-2">${models[sc.model]||'—'}</p></div>`;
-  const cards = document.getElementById('ov-students'); cards.innerHTML = '';
-  if (!sc.students.length) { cards.innerHTML = '<p class="text-sm text-[#888884] italic">No students yet.</p>'; return; }
-  sc.students.forEach((st,i) => {
-    const d = document.createElement('div');
-    d.className = 'flex items-center justify-between bg-[#F8F8F5] border border-[#DDDDDA] p-3 hover:bg-white transition-all';
-    const pwSet = st.passwords ? Object.values(st.passwords).filter(Boolean).length : 0;
-    d.innerHTML = `<div>
-      <p class="font-bold text-sm">${st.firstName} ${st.lastI}.</p>
-      <p class="text-xs text-[#888884]">${st.yearGroup} · ${(st.sessions||[]).length} sessions · ${(st.checkins||[]).length} check-ins · ${pwSet}/3 passwords set</p>
-    </div>
-    <button onclick="selectStu(${i})" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-4 py-1.5 hover:bg-[#333] transition-all">View</button>`;
-    cards.appendChild(d);
-  });
-}
-
-// ════════════════════════════════════════════════
-// STUDENTS
-// ════════════════════════════════════════════════
-function buildStudentSel() {
-  const sel = document.getElementById('g-student');
-  sel.innerHTML = '<option value="">— Select student —</option>';
-  (S.schools[S.csc]?.students || []).forEach((st,i) => {
-    const o = document.createElement('option'); o.value = i; o.textContent = `${st.firstName} ${st.lastI}. — ${st.yearGroup}`; sel.appendChild(o);
-  });
-}
-
-function addStudent() {
-  if (!S.csc) { alert('Select a school first.'); return; }
-  const first = document.getElementById('nu-first').value.trim(); if (!first) { alert('First name required.'); return; }
-  const pws = document.getElementById('nu-pw-s').value.trim();
-  const pwp = document.getElementById('nu-pw-p').value.trim();
-  const pwt = document.getElementById('nu-pw-t').value.trim();
-  S.schools[S.csc].students.push({
-    firstName:first, lastI:document.getElementById('nu-last').value.trim().toUpperCase()||'?',
-    yearGroup:document.getElementById('nu-year').value.trim()||'Unknown',
-    startDate:document.getElementById('nu-date').value||new Date().toISOString().split('T')[0],
-    referral:document.getElementById('nu-reason').value.trim(),
-    hoy:document.getElementById('nu-hoy').value.trim(), sen:document.getElementById('nu-sen').value,
-    passwords:{student:pws,parent:pwp,staff:pwt},
-    sessions:[], checkins:[], goals:[],
-    metrics:{bb:'',ba:'',ab:'',aa:'',eb:'',ea:''}
-  });
-  save(); buildStudentSel(); renderSchoolOv(); closeModal('m-student');
-  const idx = S.schools[S.csc].students.length - 1;
-  document.getElementById('g-student').value = idx; selectStu(idx);
-}
-
-function onStudentChange() { const v = document.getElementById('g-student').value; if (v==='') return; selectStu(parseInt(v)); }
-
-function selectStu(idx) {
-  S.cs = idx; document.getElementById('g-student').value = idx;
-  const st = stu(); if (!st) return;
-  const sc = S.schools[S.csc];
-  document.getElementById('school-ov').style.display = 'none'; document.getElementById('stu-dash').style.display = 'block';
-  document.getElementById('d-school').textContent = sc.name;
-  document.getElementById('d-name').textContent = `${st.firstName} ${st.lastI}.`;
-  const senM = {none:'',adhd_dx:' · ADHD (Dx)',adhd_sus:' · ADHD (Sus.)',other:' · SEN'};
-  document.getElementById('d-meta').textContent = `${st.yearGroup} · HOY: ${st.hoy||'—'} · Started: ${st.startDate||'—'}${senM[st.sen]||''}`;
-  const sc2 = (st.sessions||[]).length;
-  document.getElementById('d-week').textContent = Math.min(sc2+1,6);
-  document.getElementById('d-sess').textContent = sc2;
-  document.getElementById('d-ci').textContent = (st.checkins||[]).length;
-  updateTL(sc2); renderMetrics(); renderSessions(); renderGoals(); renderCheckins(); renderQuickLinks(); switchTab('metrics');
-}
-
-function updateTL(n) {
-  for (let w=1; w<=6; w++) {
-    const el = document.getElementById('tl'+w); if (!el) continue;
-    if (w<=n) el.className = 'flex-1 py-2 bg-[#0D0D0D] text-white text-center text-[10px]';
-    else if (w===3||w===6) el.className = 'flex-1 py-2 bg-[#F0F0EB] border-2 border-dashed border-[#DDDDDA] text-center text-[10px]';
-    else el.className = 'flex-1 py-2 bg-[#F0F0EB] text-center text-[10px]';
+  try { S = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { S = null; }
+  if (!S) {
+    let old = null; try { old = JSON.parse(localStorage.getItem(OLD_KEY) || 'null'); } catch (e) {}
+    S = { v:5, schools: (old && old.schools) || {}, workshops:[], settings:{}, lastBackup:null };
+    if (!old) [
+      {k:'gems_wac',n:'GEMS World Academy',m:'a'},{k:'gems_ws',n:'GEMS Wellington School',m:'a'},{k:'gems_dp',n:'GEMS Dubai Primary',m:'b'},
+      {k:'repton',n:'Repton School Dubai',m:'c'},{k:'hartland',n:'Hartland International',m:'b'},
+    ].forEach(d => S.schools[d.k] = {name:d.n, model:d.m, hoy:'', students:[]});
   }
+  S.workshops ||= []; S.settings = Object.assign({name:'Gary McIntyre', email:'ironmindmentoring@gmail.com', web:'ironmindmentoring.ae', wa:''}, S.settings || {});
+  if (!S.schools.private) S.schools = Object.assign({private:{name:'Private Clients (1:1)', model:'p', hoy:'', students:[]}}, S.schools);
+  Object.values(S.schools).forEach(sc => { sc.students ||= []; sc.students.forEach(normStudent); });
+  delete S.cs; delete S.csc;
+  save();
 }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Could not save — storage full?'); } }
+const stu = () => (UI.sc && UI.si != null) ? S.schools[UI.sc]?.students?.[UI.si] || null : null;
+function allStudents() { const out = []; Object.entries(S.schools).forEach(([k, sc]) => sc.students.forEach((st, i) => out.push({st, sc:k, si:i, school:sc.name}))); return out; }
+function findById(id) { return allStudents().find(x => x.st.id === id) || null; }
 
-// ════════════════════════════════════════════════
-// METRICS
-// ════════════════════════════════════════════════
-function renderMetrics() {
-  const st = stu(); if (!st) return;
-  const m = st.metrics;
-  document.getElementById('metric-inputs').innerHTML = `
-    <div><label class="lbl">Behaviour — Baseline</label><input type="number" id="mb-b" value="${m.bb}" placeholder="0" class="inp"></div>
-    <div><label class="lbl">Behaviour — Current</label><input type="number" id="mb-a" value="${m.ba}" placeholder="0" class="inp"></div>
-    <div><label class="lbl">Attendance % — Baseline</label><input type="number" id="ma-b" value="${m.ab}" placeholder="85" class="inp"></div>
-    <div><label class="lbl">Attendance % — Current</label><input type="number" id="ma-a" value="${m.aa}" placeholder="85" class="inp"></div>
-    <div><label class="lbl">Effort Grade — Baseline (1–5)</label><input type="number" id="me-b" value="${m.eb}" placeholder="3" class="inp"></div>
-    <div><label class="lbl">Effort Grade — Current (1–5)</label><input type="number" id="me-a" value="${m.ea}" placeholder="3" class="inp"></div>`;
-  renderBars();
-}
-
-function saveMetrics() {
-  const st = stu(); if (!st) return;
-  const m = st.metrics;
-  m.bb=document.getElementById('mb-b')?.value||''; m.ba=document.getElementById('mb-a')?.value||'';
-  m.ab=document.getElementById('ma-b')?.value||''; m.aa=document.getElementById('ma-a')?.value||'';
-  m.eb=document.getElementById('me-b')?.value||''; m.ea=document.getElementById('me-a')?.value||'';
-  save(); renderBars(); toast('Metrics saved');
-}
-
-function renderBars() {
-  const st = stu(); if (!st) return;
-  const m = st.metrics;
-  const container = document.getElementById('prog-bars'); container.innerHTML = '';
-  const rows = [
-    {label:'Behaviour Points', b:parseInt(m.bb)||0, c:parseInt(m.ba)||0, max:50, lower:true},
-    {label:'Attendance %', b:parseInt(m.ab)||0, c:parseInt(m.aa)||0, max:100, lower:false},
-    {label:'Effort Grade /5', b:parseInt(m.eb)||0, c:parseInt(m.ea)||0, max:5, lower:false},
-  ];
-  const cis = st.checkins || [];
-  const w3s = cis.find(c=>c.week==='3'&&c.type==='student');
-  const w6s = cis.find(c=>c.week==='6'&&c.type==='student');
-  if (w3s||w6s) {
-    const s3=w3s?.scales?.[0]?.val||0; const s6=w6s?.scales?.[0]?.val||0;
-    if (s3||s6) rows.push({label:'Student Wellbeing (1–10)', b:s3, c:s6, max:10, lower:false});
-  }
-  rows.forEach(({label,b,c,max,lower}) => {
-    if (!b&&!c) return;
-    const pct = Math.min((c/max)*100,100);
-    const imp = lower ? c<b : c>b;
-    const div = document.createElement('div');
-    div.innerHTML = `<div class="flex justify-between mb-1"><span class="text-xs font-bold">${label}</span><span class="text-xs font-bold ${imp?'text-green-600':'text-[#888884]'}">${b}→${c}${imp?' ↑':''}</span></div>
-      <div class="bg-[#F0F0EB] h-2 rounded-full overflow-hidden"><div class="metric-bar h-full bg-[#0D0D0D] rounded-full" style="width:${pct}%"></div></div>`;
-    container.appendChild(div);
+// Programme week from start date
+function progWeek(st) { const d = Math.floor((Date.now() - new Date(st.startDate)) / 864e5); return isNaN(d) ? 1 : Math.max(1, Math.floor(d / 7) + 1); }
+const prog = st => PROGS[st.programme] || PROGS.ownit_boys;
+const ciFor = (st, w, t) => (st.checkins || []).find(c => c.week === w && c.type === t);
+const dailyPct = st => Math.round(st.daily.filter(x => x === 1).length / 42 * 100);
+function lastSession(st) { return (st.sessions || []).map(s => s.date).sort().pop() || null; }
+function dueItems(st) {
+  const w = progWeek(st), out = [], p = prog(st);
+  const hasB = p.dims.some(d => st.mental.b[d] != null && st.mental.b[d] !== '');
+  const hasPhysB = st.physical.some(t => num(t.b) != null);
+  if (st.status !== 'active') return out;
+  if (!hasB) out.push({lvl:'warn', t:'Mental baseline missing'});
+  if (!hasPhysB) out.push({lvl:'warn', t:'Physical baseline missing'});
+  ['1','3','6'].forEach(wk => {
+    if (w >= +wk) { const miss = ['student','parent','staff'].filter(t => !ciFor(st, wk, t)); if (miss.length) out.push({lvl: wk === '1' ? 'info' : 'warn', t:`Week ${wk} check-ins outstanding: ${miss.join(', ')}`, wk}); }
   });
+  const ls = lastSession(st);
+  if (!ls) out.push({lvl:'info', t:'No sessions logged yet'});
+  else if ((Date.now() - new Date(ls)) / 864e5 > 10) out.push({lvl:'warn', t:`No session for ${Math.floor((Date.now() - new Date(ls)) / 864e5)} days`});
+  if ((st.sessions || []).some(s => s.flag)) out.push({lvl:'bad', t:'Safeguarding note flagged — review'});
+  return out;
 }
 
-function renderQuickLinks() {
-  const base = window.location.href.split('?')[0];
-  const sc = S.csc; const si = S.cs;
-  const st = stu();
-  const pw = st?.passwords || {};
-  const container = document.getElementById('quick-links'); container.innerHTML = '';
-  [['Student','student'],['Parent','parent'],['Staff','staff']].forEach(([label,type]) => {
-    ['1','3','6'].forEach(w => {
-      const url = `${base}?view=${type}&school=${sc}&student=${si}&week=${w}`;
-      const hasPw = pw[type] ? true : false;
-      const div = document.createElement('div');
-      div.className = 'flex items-center gap-3 flex-wrap bg-[#F8F8F5] border border-[#DDDDDA] p-3';
-      div.innerHTML = `
-        <span class="text-xs font-bold uppercase tracking-wide w-24 flex-shrink-0">${label} Wk${w}</span>
-        <span class="text-xs ${hasPw?'text-green-600 font-bold':'text-red-400'} flex-shrink-0">${hasPw?'PW: '+pw[type]:'No password set'}</span>
-        <code class="text-[10px] text-[#888884] font-mono flex-1 truncate hidden md:block">${url}</code>
-        <button onclick="copyText('${url}')" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-3 py-1 hover:bg-[#333] transition-all flex-shrink-0">Copy Link</button>`;
-      container.appendChild(div);
-    });
-  });
-}
+// ═══════════════════════════════════════════════════════════════
+// AUTH & ROUTING
+// ═══════════════════════════════════════════════════════════════
+const params = new URLSearchParams(location.search);
+const ROLE = ['student','parent','staff'].includes(params.get('view')) ? params.get('view') : null;
+const getGaryPw = () => localStorage.getItem(PW_KEY) || DEFAULT_PW;
 
-// ════════════════════════════════════════════════
-// SESSIONS
-// ════════════════════════════════════════════════
-function logSession() {
-  const st = stu(); if (!st) return;
-  st.sessions.unshift({
-    date:document.getElementById('s-date').value||new Date().toISOString().split('T')[0],
-    type:document.getElementById('s-type').value, eng:document.getElementById('s-eng').value,
-    theme:document.getElementById('s-theme').value, obs:document.getElementById('s-obs').value,
-    notes:document.getElementById('s-notes').value,
-  });
-  save(); renderSessions();
-  document.getElementById('d-sess').textContent = st.sessions.length;
-  updateTL(st.sessions.length);
-  ['s-theme','s-obs','s-notes'].forEach(id => document.getElementById(id).value='');
-  toast('Session logged');
-}
-
-function renderSessions() {
-  const st = stu(); if (!st) return;
-  const c = document.getElementById('sess-log'); c.innerHTML = '';
-  const tl = {'1-1':'1:1 Mentoring',group:'Group',assembly:'Assembly',parent:'Parent Meeting',forum:'Open Forum',debrief:'Staff Debrief'};
-  const el = ['','Resistant','Passive','Present','Engaged','Fully invested'];
-  if (!(st.sessions||[]).length) { c.innerHTML = '<p class="text-sm text-[#888884] italic">No sessions yet.</p>'; return; }
-  st.sessions.forEach(s => {
-    const div = document.createElement('div'); div.className = 'bg-white border border-[#DDDDDA] p-4';
-    div.innerHTML = `<div class="flex justify-between flex-wrap gap-2 mb-2">
-      <div><span class="text-xs font-bold uppercase tracking-wide">${tl[s.type]||s.type}</span> <span class="text-xs text-[#888884]">· ${s.date}</span></div>
-      <span class="text-xs bg-[#F0F0EB] px-2 py-0.5 font-bold">${el[parseInt(s.eng)||3]}</span></div>
-      ${s.theme?`<p class="text-xs text-[#888884] mb-1"><span class="font-bold">Theme:</span> ${s.theme}</p>`:''}
-      ${s.obs?`<p class="text-xs text-[#888884]"><span class="font-bold">Observation:</span> ${s.obs}</p>`:''}`;
-    c.appendChild(div);
-  });
-}
-
-// ════════════════════════════════════════════════
-// GOALS
-// ════════════════════════════════════════════════
-function addGoal() {
-  const st = stu(); if (!st) return;
-  const txt = document.getElementById('g-txt').value.trim(); if (!txt) return;
-  st.goals.push({text:txt, cat:document.getElementById('g-cat').value,
-    sch:document.getElementById('g-sch').checked, par:document.getElementById('g-par').checked, stuA:document.getElementById('g-stu').checked,
-    status:'active', date:new Date().toISOString().split('T')[0]});
-  save(); renderGoals(); document.getElementById('g-txt').value=''; toast('Goal added');
-}
-
-function toggleGoal(i) { const st=stu(); if(!st) return; st.goals[i].status=st.goals[i].status==='achieved'?'active':'achieved'; save(); renderGoals(); }
-
-function renderGoals() {
-  const st = stu(); if (!st) return;
-  const c = document.getElementById('goals-list'); c.innerHTML = '';
-  if (!(st.goals||[]).length) { c.innerHTML = '<p class="text-sm text-[#888884] italic">No goals set yet.</p>'; return; }
-  st.goals.forEach((g,i) => {
-    const d = document.createElement('div');
-    d.className = `border border-[#DDDDDA] p-4 flex items-start gap-3 ${g.status==='achieved'?'bg-[#F0F0EB] opacity-75':'bg-white'}`;
-    const ag = [g.sch&&'School',g.par&&'Parent',g.stuA&&'Student'].filter(Boolean).join(' · ');
-    d.innerHTML = `<input type="checkbox" ${g.status==='achieved'?'checked':''} onchange="toggleGoal(${i})" class="mt-1 w-4 h-4 accent-black flex-shrink-0">
-      <div class="flex-1"><p class="text-sm ${g.status==='achieved'?'line-through text-[#888884]':'font-medium'}">${g.text}</p>
-      <p class="text-xs text-[#888884]">${g.cat}${ag?' · '+ag:''}</p></div>
-      ${g.status==='achieved'?'<span class="text-xs font-bold text-green-600 uppercase flex-shrink-0">Done</span>':''}`;
-    c.appendChild(d);
-  });
-}
-
-// ════════════════════════════════════════════════
-// CHECK-INS DISPLAY
-// ════════════════════════════════════════════════
-function renderCheckins() {
-  const st = stu(); if (!st) return;
-  const c = document.getElementById('ci-display'); c.innerHTML = '';
-  if (!(st.checkins||[]).length) { c.innerHTML = '<p class="text-sm text-[#888884] italic">No check-ins yet. Send the Week 3 links when ready.</p>'; return; }
-  const typeL = {student:'Student Self-Report',parent:'Parent Observation',staff:'Staff Observation'};
-  ['3','6'].forEach(w => {
-    const wci = (st.checkins||[]).filter(c2=>c2.week===w);
-    if (!wci.length) return;
-    const sec = document.createElement('div');
-    const wkLabel = w==='1'?'— BASELINE CHECK-IN':w==='3'?'— MID-POINT CHECK-IN':'— FINAL CHECK-IN';
-    sec.innerHTML = `<div class="bg-[#0D0D0D] text-white px-4 py-2 mb-3"><p class="fd text-lg tracking-wide">WEEK ${w} ${wkLabel}</p></div>`;
-    ['student','parent','staff'].forEach(t => {
-      const ci = wci.find(c2=>c2.type===t);
-      if (!ci) {
-        const miss = document.createElement('div');
-        miss.className = 'border border-dashed border-[#DDDDDA] p-3 mb-3 flex justify-between items-center';
-        miss.innerHTML = `<p class="text-xs text-[#888884] font-bold uppercase tracking-wide">${typeL[t]} — Not yet submitted</p>
-          <button onclick="showLinks('${w}')" class="text-xs bg-[#0D0D0D] text-white font-bold tracking-widest uppercase px-3 py-1 hover:bg-[#333]">Send Link</button>`;
-        sec.appendChild(miss); return;
-      }
-      const card = document.createElement('div'); card.className = 'bg-white border border-[#DDDDDA] p-4 mb-3';
-      let scHtml = '';
-      if (ci.scales) scHtml = `<div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">${ci.scales.map(s=>`<div class="bg-[#F8F8F5] border border-[#DDDDDA] p-2 text-center"><p class="text-[10px] text-[#888884] uppercase tracking-wide mb-0.5">${s.label}</p><p class="fd text-2xl">${s.val}/10</p></div>`).join('')}</div>`;
-      let qaHtml = '';
-      if (ci.answers) qaHtml = ci.answers.filter(a=>a.answer).map(a=>`<div class="mb-2"><p class="text-xs font-bold text-[#888884] uppercase tracking-wide mb-0.5">${a.q}</p><p class="text-sm">${a.answer}</p></div>`).join('');
-      card.innerHTML = `<div class="flex justify-between items-center mb-3 flex-wrap gap-2">
-        <p class="text-xs font-bold uppercase tracking-wide">${typeL[t]}</p>
-        <span class="text-xs text-[#888884]">${ci.date||'—'}${ci.by?' · '+ci.by:''}</span>
-      </div>${scHtml}${qaHtml}`;
-      sec.appendChild(card);
-    });
-    c.appendChild(sec);
-  });
-}
-
-// ════════════════════════════════════════════════
-// LINKS MODAL
-// ════════════════════════════════════════════════
-function showLinks(week) {
-  if (S.cs === null || S.cs === undefined || !S.csc) {
-    toast('Please select a student first.');
-    return;
-  }
-  const base = window.location.href.split('?')[0];
-  const sc = S.csc; const si = S.cs;
-  const st = stu();
-  const pw = st?.passwords || {};
-  const wkHdrLabel = week==='1'?'BASELINE':week==='3'?'MID-POINT':'FINAL';
-  document.getElementById('links-hdr').textContent = `WEEK ${week} ${wkHdrLabel} CHECK-IN LINKS`;
-  const ll = document.getElementById('links-list'); ll.innerHTML = '';
-  [['Student Check-In','student','Send directly to the student'],
-   ['Parent Check-In','parent','Send to parent or guardian'],
-   ['Staff Check-In','staff','Send to HOY or pastoral lead']].forEach(([label,type,hint]) => {
-    const url = `${base}?view=${type}&school=${sc}&student=${si}&week=${week}`;
-    const hasPw = pw[type] ? true : false;
-    const div = document.createElement('div'); div.className = 'bg-[#F8F8F5] border border-[#DDDDDA] p-4';
-    div.innerHTML = `<div class="flex justify-between items-start mb-2">
-      <div><p class="text-xs font-bold uppercase tracking-wide">${label}</p><p class="text-xs text-[#888884]">${hint}</p></div>
-      <button onclick="copyText('${url}')" class="bg-[#0D0D0D] text-white text-xs font-bold tracking-widest uppercase px-3 py-1.5 hover:bg-[#333] transition-all">Copy Link</button>
-    </div>
-    <code class="text-[10px] text-[#888884] font-mono block truncate mb-2">${url}</code>
-    <p class="text-xs ${hasPw?'text-green-600 font-bold':'text-red-400 font-bold'}">${hasPw?'Password: '+pw[type]:'⚠ No password set — go to Passwords tab to set one'}</p>`;
-    ll.appendChild(div);
-  });
-  openModal('m-links');
-}
-
-// ════════════════════════════════════════════════
-// SUBMIT FORMS (student/parent/staff)
-// ════════════════════════════════════════════════
-function getScales(prefix, labels) {
-  return labels.map((label,i) => ({label, val:parseInt(document.getElementById(`${prefix}-sc-${i}`)?.value||5)}));
-}
-
-function submitForm(type) {
-  const params = new URLSearchParams(window.location.search);
-  const sc = params.get('school') || S.csc;
-  const si = params.get('student') !== null ? parseInt(params.get('student')) : S.cs;
-  const week = params.get('week') || '3';
-  const target = S.schools[sc]?.students?.[si];
-
-  let scales, answers;
-  const isW1 = week === '1';
-  if (type === 'student') {
-    scales = getScales('stu', STU_SCALES);
-    answers = isW1 ? [
-      {q:"What brought you here today?",               answer:document.getElementById('sq1').value},
-      {q:"What do you most want to change?",           answer:document.getElementById('sq2').value},
-      {q:"What are you good at that people don't always notice?", answer:document.getElementById('sq3').value},
-      {q:"What does a good week look like for you?",   answer:document.getElementById('sq4').value},
-      {q:"What do you want Gary to know about you?",   answer:document.getElementById('sq5').value},
-      {q:"Anything else on your mind?",                answer:document.getElementById('sq6').value},
-    ] : [
-      {q:"What's gone well since we started?",         answer:document.getElementById('sq1').value},
-      {q:"What progress have you made toward your goal?", answer:document.getElementById('sq2').value},
-      {q:"What have you enjoyed most about the sessions?", answer:document.getElementById('sq3').value},
-      {q:"What has been the hardest part?",            answer:document.getElementById('sq4').value},
-      {q:"What else do you want to achieve?",          answer:document.getElementById('sq5').value},
-      {q:"Anything you want Gary to know?",            answer:document.getElementById('sq6').value},
-    ];
-  } else if (type === 'parent') {
-    scales = getScales('par', PAR_SCALES);
-    answers = isW1 ? [
-      {q:"What has prompted you to seek support now?", answer:document.getElementById('pq1').value},
-      {q:"What does a good week look like for your son?", answer:document.getElementById('pq2').value},
-      {q:"What have you already tried?",               answer:document.getElementById('pq3').value},
-      {q:"What would success look like at the end of this programme?", answer:document.getElementById('pq4').value},
-      {q:"Anything Gary should know before the first session?", answer:document.getElementById('pq5').value},
-    ] : [
-      {q:"Positive changes noticed at home",           answer:document.getElementById('pq1').value},
-      {q:"Still concerned about",                      answer:document.getElementById('pq2').value},
-      {q:"How son has spoken about sessions",          answer:document.getElementById('pq3').value},
-      {q:"Focus for second half",                      answer:document.getElementById('pq4').value},
-      {q:"Anything else Gary should know",             answer:document.getElementById('pq5').value},
-    ];
+function initLock() {
+  if (ROLE) {
+    const labels = {student:'Student Check-In', parent:'Parent Check-In', staff:'Staff Check-In'};
+    $('lock-sub').textContent = labels[ROLE] + (params.get('n') ? ' · ' + params.get('n') : '');
+    $('lock-label').textContent = `Enter your ${ROLE} password to continue`;
   } else {
-    scales = getScales('stf', STF_SCALES);
-    answers = isW1 ? [
-      {q:"What prompted the referral?",                answer:document.getElementById('tfq1').value},
-      {q:"What does this student struggle with most?", answer:document.getElementById('tfq2').value},
-      {q:"What are his strengths?",                    answer:document.getElementById('tfq3').value},
-      {q:"What would a positive change look like?",    answer:document.getElementById('tfq4').value},
-    ] : [
-      {q:"Improvements observed",                      answer:document.getElementById('tfq1').value},
-      {q:"Areas still of concern",                     answer:document.getElementById('tfq2').value},
-      {q:"Incidents Gary should know about",           answer:document.getElementById('tfq3').value},
-      {q:"Programme priorities for second half",       answer:document.getElementById('tfq4').value},
-    ];
+    $('lock-label').textContent = 'Enter your password to open the dashboard';
+    if (!localStorage.getItem(PW_KEY)) $('lock-hint').style.display = 'block';
+    if (sessionStorage.getItem('imm_unlocked') === 'gary') return unlockGary();
   }
-
-  const ci = {type, week, scales, answers,
-    date:new Date().toISOString().split('T')[0],
-    by:type==='staff' ? document.getElementById('stf-name')?.value : type==='parent' ? document.getElementById('par-name')?.value : undefined
-  };
-
-  if (target) {
-    if (!target.checkins) target.checkins = [];
-    target.checkins = target.checkins.filter(c => !(c.week===week && c.type===type));
-    target.checkins.push(ci);
-    save();
-    if (S.csc===sc && S.cs===si) {
-      document.getElementById('d-ci').textContent = target.checkins.length;
-      renderCheckins(); renderBars();
+  setTimeout(() => $('lock-pw').focus(), 50);
+}
+function checkPw() {
+  const pw = ($('lock-pw').value || '').trim(); if (!pw) return;
+  if (ROLE) {
+    const id = params.get('id'), k = params.get('k');
+    let ok = id && k && hash(pw + '|' + id) === k;
+    if (!ok) { // fallback: same device as Gary, or legacy links
+      const legacy = S.schools[params.get('school')]?.students?.[+params.get('student')];
+      const st = id ? findById(id)?.st : legacy;
+      ok = !!(st && st.passwords[ROLE] && st.passwords[ROLE] === pw);
     }
-  }
+    if (ok) return unlockForm();
+  } else if (pw === getGaryPw()) { sessionStorage.setItem('imm_unlocked', 'gary'); return unlockGary(); }
+  $('lock-err').style.display = 'block'; $('lock-pw').value = ''; $('lock-pw').focus();
+}
+function logout() { sessionStorage.removeItem('imm_unlocked'); location.href = location.pathname + (ROLE ? location.search : ''); }
+function unlockGary() { $('lock').style.display = 'none'; $('app-header').style.display = 'block'; render(); }
+function unlockForm() {
+  $('lock').style.display = 'none'; $('app-header').style.display = 'block';
+  $('hdr-lock').textContent = 'Done'; $('nav').style.display = 'none';
+  $('hdr-sub').textContent = {student:'Student Check-In', parent:'Parent Check-In', staff:'Staff Check-In'}[ROLE];
+  renderForm();
+}
+function go(page) { UI.page = page; if (page !== 'clients') { UI.si = null; } render(); window.scrollTo(0, 0); }
 
-  const okId = type==='student' ? 'stu-ok' : type==='parent' ? 'par-ok' : 'stf-ok';
-  document.getElementById(okId).style.display = 'block';
+// ═══════════════════════════════════════════════════════════════
+// GARY — RENDER
+// ═══════════════════════════════════════════════════════════════
+function render() {
+  const pages = [['dash','Dashboard'],['clients','Clients'],['workshops','Workshops'],['library','Programmes'],['data','Data & Settings']];
+  $('nav').innerHTML = pages.map(([k, l]) => `<a class="${UI.page === k ? 'on' : ''}" onclick="go('${k}')">${l}</a>`).join('');
+  const r = $('root');
+  if (UI.page === 'dash') r.innerHTML = pgDash();
+  else if (UI.page === 'clients') r.innerHTML = pgClients();
+  else if (UI.page === 'workshops') r.innerHTML = pgWorkshops();
+  else if (UI.page === 'library') r.innerHTML = pgLibrary();
+  else r.innerHTML = pgData();
+}
+const wrap = (inner, w = 'max-w-6xl') => `<div class="${w} mx-auto px-4 md:px-6 py-6 md:py-8">${inner}</div>`;
+const stat = (l, v, s = '') => `<div class="card"><p class="lbl">${l}</p><p class="fd text-4xl leading-none mt-1">${v}</p>${s ? `<p class="text-xs text-[#888884] mt-1">${s}</p>` : ''}</div>`;
+const lvlCol = {bad:'text-red-700', warn:'text-amber-700', info:'text-[#888884]'};
+const lvlIcon = {bad:'●', warn:'▲', info:'○'};
+
+function pgDash() {
+  const all = allStudents(), active = all.filter(x => x.st.status === 'active');
+  const wk = Date.now() - 7 * 864e5;
+  const sess7 = all.reduce((a, x) => a + x.st.sessions.filter(s => new Date(s.date) >= wk).length, 0);
+  const cis = all.reduce((a, x) => a + x.st.checkins.length, 0);
+  const pw = !localStorage.getItem(PW_KEY);
+  const bk = S.lastBackup ? Math.floor((Date.now() - new Date(S.lastBackup)) / 864e5) : null;
+  const actions = active.flatMap(x => dueItems(x.st).map(d => ({...d, x}))).sort((a, b) => ({bad:0, warn:1, info:2}[a.lvl] - {bad:0, warn:1, info:2}[b.lvl]));
+  return wrap(`
+    ${pw ? `<div class="bg-amber-50 border border-amber-200 p-4 mb-5 text-sm flex flex-wrap justify-between items-center gap-3"><span><b>You're still on the default password.</b> Anyone who's seen the lock screen hint can open this. Change it in Data &amp; Settings.</span><button class="btn" onclick="go('data')">Change</button></div>` : ''}
+    ${all.length && (bk === null || bk > 7) ? `<div class="bg-white border border-[#DDDDDA] p-4 mb-5 text-sm flex flex-wrap justify-between items-center gap-3"><span>Everything is saved in this browser only. ${bk === null ? 'You have not downloaded a backup yet.' : `Last backup ${bk} days ago.`}</span><button class="btn-o" onclick="exportData()">Download backup</button></div>` : ''}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      ${stat('Active clients', active.length, `${all.length} total`)}
+      ${stat('Sessions · 7 days', sess7)}
+      ${stat('Check-ins received', cis)}
+      ${stat('Workshops', S.workshops.length, `${S.workshops.filter(w => w.status === 'delivered' || w.status === 'followed').length} delivered`)}
+    </div>
+    <div class="grid md:grid-cols-5 gap-5">
+      <div class="md:col-span-2 card">
+        <p class="lbl mb-3">Action list</p>
+        ${actions.length ? actions.slice(0, 14).map(a => `<div class="flex gap-3 py-2 border-b border-[#F0F0EB] last:border-0 cursor-pointer hover:bg-[#F8F8F5]" onclick="openStu('${a.x.sc}',${a.x.si})">
+            <span class="${lvlCol[a.lvl]} text-xs mt-0.5">${lvlIcon[a.lvl]}</span>
+            <div><p class="text-sm font-bold">${esc(a.x.st.firstName)} ${esc(a.x.st.lastI)}.</p><p class="text-xs text-[#888884]">${esc(a.t)}</p></div></div>`).join('')
+          : '<p class="text-sm text-[#888884] italic">Nothing outstanding.</p>'}
+        ${actions.length > 14 ? `<p class="text-xs text-[#888884] mt-2">+ ${actions.length - 14} more</p>` : ''}
+      </div>
+      <div class="md:col-span-3 card">
+        <div class="flex justify-between items-center mb-3"><p class="lbl mb-0">Active clients</p><button class="btn" onclick="go('clients')">Manage clients</button></div>
+        ${active.length ? `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left">
+          <th class="lbl py-2 pr-3">Client</th><th class="lbl py-2 pr-3">Programme</th><th class="lbl py-2 pr-3">Week</th><th class="lbl py-2 pr-3">Sessions</th><th class="lbl py-2">Daily</th></tr></thead><tbody>
+          ${active.map(x => `<tr class="border-t border-[#F0F0EB] cursor-pointer hover:bg-[#F8F8F5]" onclick="openStu('${x.sc}',${x.si})">
+            <td class="py-2 pr-3"><p class="font-bold">${esc(x.st.firstName)} ${esc(x.st.lastI)}.</p><p class="text-xs text-[#888884]">${esc(x.school)}</p></td>
+            <td class="py-2 pr-3 text-xs">${esc(prog(x.st).short)}</td>
+            <td class="py-2 pr-3 fd text-xl">${progWeek(x.st)}</td>
+            <td class="py-2 pr-3 text-xs">${x.st.sessions.length} / ${x.st.target}</td>
+            <td class="py-2 text-xs">${dailyPct(x.st)}%</td></tr>`).join('')}
+          </tbody></table></div>` : `<p class="text-sm text-[#888884] italic mb-3">No clients yet.</p><button class="btn" onclick="go('clients');setTimeout(addStudentModal,50)">+ Add your first client</button>`}
+      </div>
+    </div>`);
 }
 
-// ════════════════════════════════════════════════
-// REPORT
-// ════════════════════════════════════════════════
-function generateReport() {
-  const st = stu(); if (!st) return;
-  const sc = S.schools[S.csc];
-  const m = st.metrics;
-  const cis = st.checkins || [];
-  const w3s = cis.find(c=>c.week==='3'&&c.type==='student');
-  const w6s = cis.find(c=>c.week==='6'&&c.type==='student');
-  const w3p = cis.find(c=>c.week==='3'&&c.type==='parent');
-  const w6p = cis.find(c=>c.week==='6'&&c.type==='parent');
-  const w3t = cis.find(c=>c.week==='3'&&c.type==='staff');
-  const w6t = cis.find(c=>c.week==='6'&&c.type==='staff');
-  const achieved = (st.goals||[]).filter(g=>g.status==='achieved').length;
-  const total = (st.goals||[]).length;
-
-  function mRow(label,b,a,lower=false) {
-    if (!b&&!a) return '';
-    const imp = lower ? parseInt(a)<parseInt(b) : parseInt(a)>parseInt(b);
-    return `<tr><td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;font-weight:600">${label}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;text-align:center">${b||'—'}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;text-align:center">—</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;text-align:center">${a||'—'}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;text-align:center;font-weight:700;color:${imp?'#16a34a':'#888884'}">${imp?'↑':'—'}</td></tr>`;
-  }
-  function scRows(w3,w6) {
-    if (!w3&&!w6) return '';
-    return (w3||w6).scales.map((s,i) => {
-      const v3=w3?.scales?.[i]?.val||'—'; const v6=w6?.scales?.[i]?.val||'—';
-      const imp = v3!=='—'&&v6!=='—'&&parseInt(v6)>parseInt(v3);
-      return `<tr><td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;font-weight:600">${s.label}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;text-align:center">—</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;text-align:center">${v3}/10</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;text-align:center">${v6}/10</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:0.8rem;text-align:center;font-weight:700;color:${imp?'#16a34a':'#888884'}">${imp?'↑':'—'}</td></tr>`;
-    }).join('');
-  }
-  function qaBlock(ci, label) {
-    if (!ci||!ci.answers) return '';
-    const ans = ci.answers.filter(a=>a.answer);
-    if (!ans.length) return '';
-    return `<div style="margin-bottom:14px"><p style="font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#888884;margin-bottom:8px">${label}</p>
-      ${ans.map(a=>`<div style="margin-bottom:8px;padding:8px 10px;background:#F8F8F5;border:1px solid #DDDDDA">
-        <p style="font-size:0.65rem;font-weight:700;color:#888884;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px">${a.q}</p>
-        <p style="font-size:0.85rem;color:#0D0D0D">${a.answer}</p></div>`).join('')}</div>`;
-  }
-
-  document.getElementById('report-out').innerHTML = `
-  <div style="padding:32px;font-family:'DM Sans',sans-serif;color:#0D0D0D;line-height:1.6">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:2px solid #0D0D0D;margin-bottom:22px">
-      <div><p style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:0.1em;line-height:1">IRON MIND MENTORING</p>
-        <p style="font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:#888884;margin-top:2px">End-of-Cycle Progress Report</p></div>
-      <div style="text-align:right"><p style="font-weight:700;font-size:1rem">${st.firstName} ${st.lastI}.</p>
-        <p style="font-size:0.75rem;color:#888884">${st.yearGroup} · ${sc.name}</p>
-        <p style="font-size:0.75rem;color:#888884">HOY: ${st.hoy||'—'} · Started: ${st.startDate||'—'}</p>
-        <p style="font-size:0.75rem;color:#888884">Report: ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</p></div>
+// ─── CLIENTS ───
+function openStu(sc, si) { UI.page = 'clients'; UI.sc = sc; UI.si = si; UI.tab = 'overview'; render(); window.scrollTo(0, 0); }
+function pickSchool(k) { UI.sc = k || null; UI.si = null; render(); }
+function pgClients() {
+  if (stu()) return pgStudent();
+  const sc = UI.sc ? S.schools[UI.sc] : null;
+  const list = Object.entries(S.schools);
+  return wrap(`
+    <div class="flex flex-wrap gap-2 mb-5 items-center">
+      ${list.map(([k, s]) => `<button class="tab ${UI.sc === k ? 'on' : ''}" onclick="pickSchool('${k}')">${esc(s.name)} <span class="opacity-60">${s.students.length}</span></button>`).join('')}
+      <button class="btn-o" onclick="addSchoolModal()">+ School / Academy</button>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px">
-      <div style="background:#F8F8F5;border:1px solid #DDDDDA;padding:12px;text-align:center"><p style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.15em;color:#888884;margin-bottom:4px">Sessions</p><p style="font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1">${(st.sessions||[]).length}</p><p style="font-size:0.65rem;color:#888884">of 6</p></div>
-      <div style="background:#F8F8F5;border:1px solid #DDDDDA;padding:12px;text-align:center"><p style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.15em;color:#888884;margin-bottom:4px">Goals</p><p style="font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1">${achieved}/${total||'—'}</p><p style="font-size:0.65rem;color:#888884">achieved</p></div>
-      <div style="background:#F8F8F5;border:1px solid #DDDDDA;padding:12px;text-align:center"><p style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.15em;color:#888884;margin-bottom:4px">Check-ins</p><p style="font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1">${cis.length}</p><p style="font-size:0.65rem;color:#888884">submitted</p></div>
-      <div style="background:#F8F8F5;border:1px solid #DDDDDA;padding:12px;text-align:center"><p style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.15em;color:#888884;margin-bottom:4px">SEN</p><p style="font-size:0.85rem;font-weight:700;margin-top:6px">${{none:'None',adhd_dx:'ADHD (Dx)',adhd_sus:'ADHD (Sus.)',other:'SEN'}[st.sen]||'—'}</p></div>
-    </div>
-    <div style="margin-bottom:22px">
-      <p style="font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#888884;margin-bottom:8px">Measurable Outcomes — Baseline → Week 3 → Week 6</p>
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:#0D0D0D;color:white">
-          <th style="padding:7px;text-align:left;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase">Measurable</th>
-          <th style="padding:7px;text-align:center;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase">Baseline</th>
-          <th style="padding:7px;text-align:center;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase">Week 3</th>
-          <th style="padding:7px;text-align:center;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase">Week 6</th>
-          <th style="padding:7px;text-align:center;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase">Change</th>
-        </tr></thead>
-        <tbody>
-          ${mRow('Behaviour Points',m.bb,m.ba,true)}
-          ${mRow('Attendance %',m.ab,m.aa)}
-          ${mRow('Effort Grade /5',m.eb,m.ea)}
-          ${scRows(w3s,w6s)}
-          ${scRows(w3p,w6p)}
-          ${scRows(w3t,w6t)}
-        </tbody>
-      </table>
-    </div>
-    ${total ? `<div style="margin-bottom:22px">
-      <p style="font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#888884;margin-bottom:8px">Agreed Goals and Measurables</p>
-      ${(st.goals||[]).map(g=>`<div style="display:flex;align-items:center;gap:10px;padding:7px;border-bottom:1px solid #DDDDDA;background:${g.status==='achieved'?'#F0F0EB':'white'}">
-        <span style="font-size:0.9rem;font-weight:700;color:${g.status==='achieved'?'#16a34a':'#DDDDDA'}">${g.status==='achieved'?'✓':'○'}</span>
-        <span style="font-size:0.85rem;${g.status==='achieved'?'text-decoration:line-through;color:#888884':''}">${g.text}</span>
-        <span style="margin-left:auto;font-size:0.65rem;text-transform:uppercase;color:#888884">${g.cat}</span></div>`).join('')}
-    </div>` : ''}
-    ${(st.sessions||[]).length ? `<div style="margin-bottom:22px">
-      <p style="font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#888884;margin-bottom:8px">Sessions Summary</p>
-      <table style="width:100%;border-collapse:collapse;font-size:0.78rem">
-        <thead><tr style="background:#F0F0EB"><th style="padding:5px 8px;text-align:left;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em">Date</th><th style="padding:5px 8px;text-align:left;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em">Type</th><th style="padding:5px 8px;text-align:left;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em">Theme / Observation</th><th style="padding:5px 8px;text-align:center;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em">Engagement</th></tr></thead>
-        <tbody>${(st.sessions||[]).slice(0,6).map(s=>{
-          const tl2={'1-1':'1:1','group':'Group','assembly':'Assembly','parent':'Parent','forum':'Open Forum','debrief':'Debrief'};
-          const el2=['','Resistant','Passive','Present','Engaged','Fully invested'];
-          return `<tr style="border-bottom:1px solid #DDDDDA"><td style="padding:5px 8px">${s.date}</td><td style="padding:5px 8px">${tl2[s.type]||s.type}</td><td style="padding:5px 8px;color:#888884">${s.theme||s.obs||'—'}</td><td style="padding:5px 8px;text-align:center;font-weight:700">${el2[parseInt(s.eng)||3]}</td></tr>`;
-        }).join('')}</tbody>
-      </table>
-    </div>` : ''}
-    ${w3s||w3p||w3t ? `<div style="margin-bottom:22px">
-      <div style="background:#0D0D0D;color:white;padding:8px 12px;margin-bottom:12px"><p style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.08em">WEEK 3 — MID-POINT CHECK-IN</p></div>
-      ${qaBlock(w3s,'Student Voice — Week 3')}
-      ${qaBlock(w3p,'Parent Observations — Week 3')}
-      ${qaBlock(w3t,'Staff Observations — Week 3')}
-    </div>` : ''}
-    ${w6s||w6p||w6t ? `<div style="margin-bottom:22px">
-      <div style="background:#0D0D0D;color:white;padding:8px 12px;margin-bottom:12px"><p style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:0.08em">WEEK 6 — FINAL CHECK-IN</p></div>
-      ${qaBlock(w6s,'Student Voice — Week 6')}
-      ${qaBlock(w6p,'Parent Observations — Week 6')}
-      ${qaBlock(w6t,'Staff Observations — Week 6')}
-    </div>` : ''}
-    <div style="margin-bottom:22px">
-      <p style="font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#888884;margin-bottom:8px">Gary's Assessment and Recommended Next Steps</p>
-      <div style="background:#F8F8F5;border:1px solid #DDDDDA;padding:14px;min-height:80px">
-        <p style="font-size:0.8rem;color:#888884;font-style:italic">[Gary completes this section before sharing the report with school and family.]</p>
+    ${!sc ? `<div class="card text-sm text-[#888884]">Choose a school, academy or <b>Private Clients</b> above — or <button class="underline text-black" onclick="UI.sc='private';addStudentModal()">add a 1:1 client</button>.</div>` : `
+    <div class="card mb-5">
+      <div class="flex flex-wrap justify-between gap-3 mb-4">
+        <div><p class="fd text-3xl leading-none">${esc(sc.name)}</p><p class="text-xs text-[#888884] mt-1">${esc(MODELS[sc.model] || '—')}${sc.hoy ? ' · Lead: ' + esc(sc.hoy) : ''}</p></div>
+        <div class="flex gap-2"><button class="btn-o" onclick="addSchoolModal('${UI.sc}')">Edit</button><button class="btn" onclick="addStudentModal()">+ Student</button></div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        ${stat('Students', sc.students.length)}
+        ${stat('Sessions', sc.students.reduce((a, s) => a + s.sessions.length, 0))}
+        ${stat('Check-ins', sc.students.reduce((a, s) => a + s.checkins.length, 0))}
+        ${stat('Goals achieved', sc.students.reduce((a, s) => a + s.goals.filter(g => g.status === 'achieved').length, 0))}
       </div>
     </div>
-    <div style="display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid #DDDDDA">
-      <div><p style="font-size:0.75rem;font-weight:700">Gary McIntyre — Iron Mind Mentoring</p><p style="font-size:0.7rem;color:#888884">gary@ironmindmentoring.ae · ironmindmentoring.ae</p></div>
-      <div style="text-align:right"><p style="font-size:0.7rem;color:#888884">Develop the Mind. Build the Body.</p><p style="font-size:0.65rem;color:#888884">Confidential — For school and family use only</p></div>
+    <div class="space-y-2">
+      ${sc.students.length ? sc.students.map((st, i) => `<div class="card !p-3 flex flex-wrap items-center justify-between gap-3">
+        <div><p class="font-bold">${esc(st.firstName)} ${esc(st.lastI)}. <span class="chip ml-1">${esc(prog(st).short)}</span> ${st.status !== 'active' ? `<span class="chip ml-1">${esc(st.status)}</span>` : ''}</p>
+        <p class="text-xs text-[#888884]">${esc(st.yearGroup)} · Week ${progWeek(st)} · ${st.sessions.length}/${st.target} sessions · ${st.checkins.length} check-ins · ${Object.values(st.passwords).filter(Boolean).length}/3 passwords</p></div>
+        <button class="btn" onclick="openStu('${UI.sc}',${i})">Open</button></div>`).join('') : '<p class="text-sm text-[#888884] italic">No students yet.</p>'}
+    </div>`}`);
+}
+
+function addSchoolModal(key) {
+  const s = key ? S.schools[key] : {name:'', model:'a', hoy:''};
+  openModal(`<h3 class="fd text-2xl mb-5">${key ? 'EDIT' : 'ADD'} SCHOOL / ACADEMY</h3>
+    <div class="space-y-3 mb-5">
+      <div><label class="lbl">Name</label><input id="ns-name" class="inp" value="${esc(s.name)}"></div>
+      <div><label class="lbl">Pricing model</label><select id="ns-model" class="inp">${Object.entries(MODELS).map(([k, v]) => `<option value="${k}" ${s.model === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+      <div><label class="lbl">HOY / Pastoral lead / Head coach</label><input id="ns-hoy" class="inp" value="${esc(s.hoy)}" placeholder="Name and contact"></div>
+    </div>
+    <div class="flex gap-3"><button class="btn" onclick="saveSchool('${key || ''}')">Save</button><button class="btn-o" onclick="closeModal()">Cancel</button>
+    ${key && key !== 'private' && !s.students.length ? `<button class="btn-o ml-auto" onclick="delSchool('${key}')">Delete</button>` : ''}</div>`);
+}
+function saveSchool(key) {
+  const name = $('ns-name').value.trim(); if (!name) return;
+  if (!key) { key = name.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_' + Date.now().toString(36); S.schools[key] = {students:[]}; }
+  Object.assign(S.schools[key], {name, model:$('ns-model').value, hoy:$('ns-hoy').value.trim()});
+  save(); closeModal(); UI.sc = key; render();
+}
+function delSchool(k) { if (!confirm('Delete this school?')) return; delete S.schools[k]; UI.sc = null; save(); closeModal(); render(); }
+
+function addStudentModal(edit) {
+  if (!UI.sc) UI.sc = 'private';
+  const st = edit ? stu() : blankStudent();
+  const f = (id, l, v, extra = '') => `<div><label class="lbl">${l}</label><input id="${id}" class="inp" value="${esc(v)}" ${extra}></div>`;
+  openModal(`<h3 class="fd text-2xl mb-1">${edit ? 'EDIT CLIENT' : 'ADD CLIENT'}</h3><p class="text-xs text-[#888884] mb-5">${esc(S.schools[UI.sc].name)}</p>
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      ${f('nu-first', 'First name', st.firstName)}
+      ${f('nu-last', 'Last initial', st.lastI, 'maxlength="1" placeholder="e.g. M"')}
+      ${f('nu-year', 'Year group / Age', st.yearGroup, 'placeholder="e.g. Year 8"')}
+      ${f('nu-date', 'Start date', st.startDate, 'type="date"')}
+      <div class="col-span-2"><label class="lbl">Programme</label><select id="nu-prog" class="inp">${Object.entries(PROGS).map(([k, p]) => `<option value="${k}" ${st.programme === k ? 'selected' : ''}>${p.name} — ${p.who}</option>`).join('')}</select></div>
+      ${f('nu-target', 'Sessions planned', st.target, 'type="number" min="1"')}
+      <div><label class="lbl">Status</label><select id="nu-status" class="inp">${['active','paused','complete'].map(s => `<option ${st.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+      ${f('nu-hoy', 'HOY / Coach / Parent contact', st.hoy)}
+      <div><label class="lbl">ADHD / SEN</label><select id="nu-sen" class="inp">${Object.entries(SEN).map(([k, v]) => `<option value="${k}" ${st.sen === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+      <div class="col-span-2"><label class="lbl">Referral reason (private)</label><textarea id="nu-reason" rows="2" class="inp resize-none">${esc(st.referral)}</textarea></div>
+    </div>
+    ${edit ? '' : `<div class="border-t border-[#DDDDDA] pt-4 mb-5"><p class="lbl mb-3">Check-in passwords (or set later in Access &amp; Links)</p>
+      <div class="grid grid-cols-3 gap-3">${f('nu-pw-s', 'Student', '', 'placeholder="e.g. James26"')}${f('nu-pw-p', 'Parent', '', 'placeholder="e.g. Smith26"')}${f('nu-pw-t', 'Staff', '', 'placeholder="e.g. GWA26"')}</div></div>`}
+    <div class="flex gap-3"><button class="btn" onclick="saveStudent(${edit ? 1 : 0})">Save</button><button class="btn-o" onclick="closeModal()">Cancel</button>
+    ${edit ? `<button class="btn-o ml-auto !text-red-700" onclick="delStudent()">Delete</button>` : ''}</div>`);
+}
+function saveStudent(edit) {
+  const first = $('nu-first').value.trim(); if (!first) return toast('First name required');
+  const vals = {firstName:first, lastI:($('nu-last').value.trim().toUpperCase() || '?'), yearGroup:$('nu-year').value.trim(), startDate:$('nu-date').value || today(),
+    programme:$('nu-prog').value, target:Math.max(1, parseInt($('nu-target').value) || 24), status:$('nu-status').value,
+    hoy:$('nu-hoy').value.trim(), sen:$('nu-sen').value, referral:$('nu-reason').value.trim()};
+  if (edit) Object.assign(stu(), vals);
+  else {
+    const st = blankStudent(vals); st.passwords = {student:$('nu-pw-s').value.trim(), parent:$('nu-pw-p').value.trim(), staff:$('nu-pw-t').value.trim()};
+    S.schools[UI.sc].students.push(st); UI.si = S.schools[UI.sc].students.length - 1; UI.tab = 'overview';
+  }
+  save(); closeModal(); UI.page = 'clients'; render();
+}
+function delStudent() {
+  const st = stu(); if (!confirm(`Permanently delete ${st.firstName} and all their data?`)) return;
+  S.schools[UI.sc].students.splice(UI.si, 1); UI.si = null; save(); closeModal(); render();
+}
+
+// ─── STUDENT ───
+function setF(path, v, rerender) { setP(stu(), path, v); save(); if (rerender) setTimeout(render, 0); }
+function tab(t) { UI.tab = t; render(); }
+function pgStudent() {
+  const st = stu(), sc = S.schools[UI.sc], p = prog(st), w = progWeek(st);
+  const tabs = [['overview','Overview'],['progress','Baseline & Progress'],['journey','6-Week Journey'],['toolkit','Toolkit'],['sessions','Sessions'],['goals','Goals'],['checkins','Check-ins'],['access','Access & Links'],['report','Report']];
+  const wkT = p.weeks[Math.min(w, 6) - 1];
+  return wrap(`
+    <div class="no-print flex items-center gap-2 mb-4 text-xs"><button class="text-[#888884] hover:text-black font-bold tracking-widest uppercase" onclick="UI.si=null;render()">← ${esc(sc.name)}</button></div>
+    <div class="bg-[#0D0D0D] text-white p-5 mb-5 flex flex-wrap justify-between items-start gap-4 no-print">
+      <div>
+        <p class="text-[10px] tracking-widest uppercase text-[#AAAAAA] mb-1">${esc(sc.name)} · ${esc(p.name)}</p>
+        <h2 class="fd text-4xl leading-none">${esc(st.firstName)} ${esc(st.lastI)}.</h2>
+        <p class="text-[#AAAAAA] text-sm mt-1">${esc(st.yearGroup || '—')} · Started ${fmtDate(st.startDate)}${st.sen !== 'none' ? ' · ' + esc(SEN[st.sen]) : ''}${st.status !== 'active' ? ' · ' + esc(st.status.toUpperCase()) : ''}</p>
+        <button class="text-[10px] tracking-widest uppercase text-[#AAAAAA] hover:text-white mt-2 underline" onclick="addStudentModal(1)">Edit details</button>
+      </div>
+      <div class="flex gap-6 text-center">
+        <div><p class="text-[10px] tracking-widest uppercase text-[#AAAAAA]">Week</p><p class="fd text-5xl leading-none">${w}</p><p class="text-[10px] text-[#AAAAAA]">${w <= 6 ? esc(wkT.t) : 'BEYOND 6'}</p></div>
+        <div><p class="text-[10px] tracking-widest uppercase text-[#AAAAAA]">Sessions</p><p class="fd text-5xl leading-none">${st.sessions.length}</p><p class="text-[10px] text-[#AAAAAA]">OF ${st.target}</p></div>
+        <div><p class="text-[10px] tracking-widest uppercase text-[#AAAAAA]">Daily</p><p class="fd text-5xl leading-none">${dailyPct(st)}%</p><p class="text-[10px] text-[#AAAAAA]">OF 42 DAYS</p></div>
+      </div>
+    </div>
+    <div class="flex gap-2 mb-5 scroll-x no-print">${tabs.map(([k, l]) => `<button class="tab ${UI.tab === k ? 'on' : ''}" onclick="tab('${k}')">${l}</button>`).join('')}</div>
+    <div id="panel">${({overview:tOverview, progress:tProgress, journey:tJourney, toolkit:tToolkit, sessions:tSessions, goals:tGoals, checkins:tCheckins, access:tAccess, report:tReport}[UI.tab] || tOverview)(st)}</div>`);
+}
+
+function timeline(st) {
+  const w = progWeek(st), p = prog(st);
+  return `<div class="grid grid-cols-6 gap-px bg-[#DDDDDA] border border-[#DDDDDA] text-center">
+    ${p.weeks.map((wk, i) => { const n = i + 1, done = n < w, cur = n === w, ci = n === 1 || n === 3 || n === 6;
+      return `<div class="py-2 px-1 ${cur ? 'bg-[#0D0D0D] text-white' : done ? 'bg-[#3a3a38] text-white' : 'bg-[#F8F8F5]'}">
+        <p class="text-[10px] font-bold">WK ${n}${ci ? ' ◆' : ''}</p><p class="text-[9px] md:text-[10px] ${cur || done ? 'text-[#CCC]' : 'text-[#888884]'} leading-tight">${esc(wk.t)}</p></div>`; }).join('')}
+  </div><p class="text-[10px] text-[#888884] mt-2">◆ Check-in weeks: baseline (1), mid-point (3), final (6). Week 6 is the review point for the full ${st.target}-session programme.</p>`;
+}
+function tOverview(st) {
+  const due = dueItems(st), p = prog(st), w = Math.min(progWeek(st), 6), wk = p.weeks[w - 1];
+  const g = st.goals.filter(x => x.status !== 'achieved');
+  return `<div class="card mb-5"><p class="lbl mb-3">Programme timeline</p>${timeline(st)}</div>
+  <div class="grid md:grid-cols-2 gap-5 mb-5">
+    <div class="card"><p class="lbl mb-2">This week — Week ${w}: ${esc(wk.t)}</p>
+      <p class="fs text-xl mb-2">“${esc(wk.q)}”</p><p class="text-sm text-[#555] mb-3">${esc(wk.f)}</p>
+      ${wk.ch ? `<div class="bg-[#F8F8F5] border border-[#DDDDDA] p-3"><p class="lbl">Challenge — ${esc(wk.ch)}</p><p class="text-sm">${esc(wk.cd)}</p></div>` : ''}
+    </div>
+    <div class="card"><p class="lbl mb-2">To do</p>
+      ${due.length ? due.map(d => `<p class="text-sm py-1 ${lvlCol[d.lvl]}">${lvlIcon[d.lvl]} <span class="text-[#0D0D0D]">${esc(d.t)}</span>
+        ${d.wk ? ` <button class="underline text-xs text-[#888884]" onclick="showLinks('${d.wk}')">send links</button>` : ''}</p>`).join('') : '<p class="text-sm text-[#888884] italic">All up to date.</p>'}
+      <p class="lbl mt-4 mb-2">Open goals</p>
+      ${g.length ? g.map(x => `<p class="text-sm py-0.5">○ ${esc(x.text)}</p>`).join('') : '<p class="text-sm text-[#888884] italic">None.</p>'}
+    </div>
+  </div>
+  <div class="card"><p class="lbl mb-3">Mental profile — ${esc(p.short)} self-rating</p>${dimsChart(st)}</div>`;
+}
+
+// ─── CHARTS ───
+const legend = keys => `<div class="flex gap-4 flex-wrap text-xs text-[#555] mb-3">${keys.map(k => `<span class="flex items-center gap-1.5"><span style="width:10px;height:10px;border-radius:50%;background:${PHASE_COL[k]};display:inline-block"></span>${PHASES.find(p => p.k === k).l}</span>`).join('')}</div>`;
+function dumbbell(label, vals, min, max, unit = '', lower = false) {
+  const pts = PHASES.map(p => ({k:p.k, l:p.l, v:num(vals[p.k])})).filter(p => p.v != null);
+  const pos = v => Math.max(0, Math.min(100, (v - min) / (max - min) * 100));
+  const first = pts[0], last = pts[pts.length - 1];
+  const delta = pts.length > 1 ? last.v - first.v : null;
+  const good = delta != null && (lower ? delta < 0 : delta > 0);
+  return `<div class="grid grid-cols-[minmax(90px,140px)_1fr_64px] gap-3 items-center py-1.5">
+    <span class="text-xs font-bold">${esc(label)}</span>
+    <div class="track"><div class="rail"></div>
+      ${pts.length > 1 ? `<div class="seg" style="left:${Math.min(pos(first.v), pos(last.v))}%;width:${Math.abs(pos(last.v) - pos(first.v))}%"></div>` : ''}
+      ${pts.map(p => `<span class="dot" style="left:${pos(p.v)}%;background:${PHASE_COL[p.k]}" title="${esc(label)} — ${p.l}: ${p.v}${unit}"></span>`).join('')}
+    </div>
+    <span class="text-xs text-right font-bold ${good ? 'text-green-700' : 'text-[#888884]'}">${pts.length ? (delta != null ? `${first.v}→${last.v}` : `${last.v}`) + unit : '—'}${good ? ' ↑' : ''}</span>
+  </div>`;
+}
+function dimsChart(st) {
+  const p = prog(st);
+  if (!p.dims.some(d => PHASES.some(ph => num(st.mental[ph.k][d]) != null))) return '<p class="text-sm text-[#888884] italic">No ratings yet. Enter the journal “Where are you now?” scores in Baseline &amp; Progress, or send the Week 1 student check-in.</p>';
+  return legend(['b','m','f']) + `<div class="text-[10px] text-[#888884] grid grid-cols-[minmax(90px,140px)_1fr_64px] gap-3"><span></span><span class="flex justify-between"><span>1</span><span>10</span></span><span></span></div>` + p.dims.map(d => dumbbell(d, {b:st.mental.b[d], m:st.mental.m[d], f:st.mental.f[d]}, 1, 10)).join('');
+}
+function radar(st) {
+  const N = WHEEL.length, R = 110, cx = 160, cy = 150;
+  const pt = (i, v) => { const a = -Math.PI / 2 + i * 2 * Math.PI / N; const r = R * (v || 0) / 10; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+  const has = k => WHEEL.some(w => num(st.wheel[k][w]) != null);
+  const poly = (k, fill, stroke, dash) => has(k) ? `<polygon points="${WHEEL.map((w, i) => pt(i, num(st.wheel[k][w])).join(',')).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="2" ${dash ? 'stroke-dasharray="4 3"' : ''}/>` : '';
+  const rings = [2, 4, 6, 8, 10].map(v => `<polygon points="${WHEEL.map((w, i) => pt(i, v).join(',')).join(' ')}" fill="none" stroke="#ECECE8" stroke-width="1"/>`).join('');
+  const spokes = WHEEL.map((w, i) => { const [x, y] = pt(i, 10); return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#ECECE8"/>`; }).join('');
+  const labels = WHEEL.map((w, i) => { const [x, y] = pt(i, 12.2); const b = num(st.wheel.b[w]), f = num(st.wheel.f[w]);
+    return `<text x="${x}" y="${y}" text-anchor="${Math.abs(x - cx) < 5 ? 'middle' : x > cx ? 'start' : 'end'}" dominant-baseline="middle" font-size="10" font-weight="700" fill="#0D0D0D">${esc(w)}<tspan fill="#888884" font-weight="400"> ${b ?? '–'}${f != null ? '→' + f : ''}</tspan><title>${esc(w)}: baseline ${b ?? '—'}, week 6 ${f ?? '—'}</title></text>`; }).join('');
+  const dots = ['b','f'].map(k => has(k) ? WHEEL.map((w, i) => { const v = num(st.wheel[k][w]); if (v == null) return ''; const [x, y] = pt(i, v); return `<circle cx="${x}" cy="${y}" r="4" fill="${PHASE_COL[k]}" stroke="#fff" stroke-width="2"><title>${esc(w)} — ${k === 'b' ? 'Baseline' : 'Week 6'}: ${v}</title></circle>`; }).join('') : '').join('');
+  return `${legend(['b','f'])}<svg viewBox="-75 0 470 300" class="w-full max-w-md mx-auto block" role="img" aria-label="Wheel of life, baseline versus week 6">${rings}${spokes}${poly('b', 'rgba(196,196,190,.35)', '#B5B5AF', true)}${poly('f', 'rgba(13,13,13,.08)', '#0D0D0D')}${dots}${labels}</svg>`;
+}
+
+// ─── PROGRESS TAB ───
+function tProgress(st) {
+  const p = prog(st);
+  const nIn = (path, v, ph = '', ex = '') => `<input type="number" ${ex} class="inp !px-2 !py-1.5 text-center" value="${esc(v ?? '')}" placeholder="${ph}" onchange="setF('${path}',this.value,1)">`;
+  const m = st.metrics;
+  return `
+  <div class="card mb-5">
+    <div class="flex flex-wrap justify-between gap-2 mb-1"><p class="lbl">Mental baseline — ${esc(p.short)} “Where are you now?” (1–10)</p></div>
+    <p class="text-xs text-[#888884] mb-4">From the journal: today, halfway, end. Student check-ins fill these in automatically when imported.</p>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th></th>${PHASES.map(ph => `<th class="lbl text-center px-1">${ph.l}</th>`).join('')}</tr></thead><tbody>
+        ${p.dims.map(d => `<tr><td class="text-xs font-bold pr-2 py-1">${d}</td>${PHASES.map(ph => `<td class="px-1 py-1 w-20">${nIn(`mental.${ph.k}.${d}`, st.mental[ph.k][d], '', 'min="1" max="10"')}</td>`).join('')}</tr>`).join('')}
+      </tbody></table></div>
+      <div>${dimsChart(st)}</div>
+    </div>
+  </div>
+  <div class="card mb-5">
+    <p class="lbl mb-1">Physical baseline</p><p class="text-xs text-[#888884] mb-4">Tested at week 0 and re-tested at week 6. Add whatever tests you use in the gym.</p>
+    <div class="overflow-x-auto"><table class="w-full text-sm min-w-[560px]"><thead><tr><th class="lbl text-left">Test</th><th class="lbl">Unit</th><th class="lbl">Lower is better</th>${PHASES.map(ph => `<th class="lbl text-center">${ph.l}</th>`).join('')}<th class="lbl">Change</th><th></th></tr></thead><tbody>
+      ${st.physical.map((t, i) => { const b = num(t.b), f = num(t.f) ?? num(t.m); const d = b != null && f != null ? +(f - b).toFixed(2) : null; const good = d != null && (t.lower ? d < 0 : d > 0);
+        return `<tr><td class="py-1 pr-2"><input class="inp !py-1.5" value="${esc(t.name)}" onchange="setF('physical.${i}.name',this.value)"></td>
+        <td class="px-1 w-20"><input class="inp !py-1.5 text-center" value="${esc(t.unit)}" onchange="setF('physical.${i}.unit',this.value)"></td>
+        <td class="text-center"><input type="checkbox" class="accent-black w-4 h-4" ${t.lower ? 'checked' : ''} onchange="setF('physical.${i}.lower',this.checked,1)"></td>
+        ${PHASES.map(ph => `<td class="px-1 w-20">${nIn(`physical.${i}.${ph.k}`, t[ph.k], '', 'step="any"')}</td>`).join('')}
+        <td class="text-center text-xs font-bold ${good ? 'text-green-700' : 'text-[#888884]'}">${d == null ? '—' : (d > 0 ? '+' : '') + d + ' ' + esc(t.unit)}</td>
+        <td><button class="text-[#888884] hover:text-red-700 px-2" title="Remove" onclick="stu().physical.splice(${i},1);save();render()">×</button></td></tr>`; }).join('')}
+    </tbody></table></div>
+    <button class="btn-o mt-3" onclick="stu().physical.push({name:'',unit:'',lower:false,b:'',m:'',f:''});save();render()">+ Add test</button>
+  </div>
+  ${p.wheel ? `<div class="card mb-5"><p class="lbl mb-1">The Wheel (1–10)</p><p class="text-xs text-[#888884] mb-4">From the OWN IT starting-point page — baseline and week 6.</p>
+    <div class="grid md:grid-cols-2 gap-6 items-center">
+      <table class="w-full text-sm"><thead><tr><th></th><th class="lbl text-center">Baseline</th><th class="lbl text-center">Week 6</th></tr></thead><tbody>
+      ${WHEEL.map(w => `<tr><td class="text-xs font-bold py-1">${w}</td>${['b','f'].map(k => `<td class="px-1 w-24">${nIn(`wheel.${k}.${w}`, st.wheel[k][w], '', 'min="1" max="10"')}</td>`).join('')}</tr>`).join('')}
+      </tbody></table><div>${radar(st)}</div></div></div>` : ''}
+  <div class="card">
+    <p class="lbl mb-1">School measurables</p><p class="text-xs text-[#888884] mb-4">From the school's own data: behaviour points, attendance and effort.</p>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="grid grid-cols-3 gap-2 items-center text-xs">
+        <span></span><span class="lbl text-center">Baseline</span><span class="lbl text-center">Current</span>
+        <span class="font-bold">Behaviour points</span>${nIn('metrics.bb', m.bb, '0')}${nIn('metrics.ba', m.ba, '0')}
+        <span class="font-bold">Attendance %</span>${nIn('metrics.ab', m.ab, '85')}${nIn('metrics.aa', m.aa, '85')}
+        <span class="font-bold">Effort grade /5</span>${nIn('metrics.eb', m.eb, '3')}${nIn('metrics.ea', m.ea, '3')}
+      </div>
+      <div>${legend(['b','f'])}
+        ${dumbbell('Behaviour pts', {b:m.bb, f:m.ba}, 0, Math.max(10, num(m.bb) || 0, num(m.ba) || 0), '', true)}
+        ${dumbbell('Attendance', {b:m.ab, f:m.aa}, Math.min(50, num(m.ab) ?? 50, num(m.aa) ?? 50), 100, '%')}
+        ${dumbbell('Effort', {b:m.eb, f:m.ea}, 1, 5)}</div>
     </div>
   </div>`;
 }
 
-// ════════════════════════════════════════════════
-// TABS
-// ════════════════════════════════════════════════
-function switchTab(name) {
-  ['metrics','sessions','goals','checkins','passwords','report'].forEach(function(t) {
-    const p = document.getElementById('panel-'+t);
-    const b = document.getElementById('tab-'+t);
-    if (p) {
-      p.classList.remove('on','off');
-      p.classList.add(t===name ? 'on' : 'off');
-    }
-    if (b) b.className = t===name
-      ? 'tab-active text-xs font-bold tracking-widest uppercase px-5 py-2'
-      : 'tab-inactive text-xs font-bold tracking-widest uppercase px-5 py-2';
-  });
-  if (name==='report') generateReport();
-  if (name==='passwords') renderPwStatus();
+// ─── JOURNEY TAB ───
+function cycleDay(i) { const st = stu(); st.daily[i] = (st.daily[i] + 1) % 3; save(); render(); }
+function tJourney(st) {
+  const p = prog(st), w = progWeek(st);
+  const streak = (() => { let s = 0, best = 0; st.daily.forEach(d => { s = d === 1 ? s + 1 : 0; best = Math.max(best, s); }); return best; })();
+  return `
+  <div class="card mb-5">
+    <div class="flex flex-wrap justify-between items-end gap-3 mb-3">
+      <div><p class="lbl">The Daily — 42 days</p><p class="text-xs text-[#888884]">Morning, today's activity, night. Tap a day: once = done, twice = missed, three times = clear.</p></div>
+      <div class="flex gap-5 text-center"><div><p class="lbl">Done</p><p class="fd text-3xl leading-none">${st.daily.filter(x => x === 1).length}</p></div><div><p class="lbl">Best streak</p><p class="fd text-3xl leading-none">${streak}</p></div></div>
+    </div>
+    <div class="grid grid-cols-[40px_repeat(7,1fr)] gap-1 max-w-xl">
+      ${[0,1,2,3,4,5].map(r => `<span class="text-[10px] font-bold text-[#888884] self-center">WK ${r + 1}</span>` + [0,1,2,3,4,5,6].map(c => { const i = r * 7 + c; return `<div class="day d${st.daily[i]}" onclick="cycleDay(${i})" title="Day ${i + 1}">${i + 1}</div>`; }).join('')).join('')}
+    </div>
+  </div>
+  <div class="space-y-3">
+    ${p.weeks.map((wk, i) => { const n = i + 1, c = st.challenges[n] || {};
+      return `<div class="card ${n === w ? 'ring-2 ring-[#0D0D0D]' : ''}">
+        <div class="flex flex-wrap justify-between gap-2 mb-2">
+          <div><p class="lbl">Week ${n} of 6${n === w ? ' · current' : ''}</p><p class="fd text-2xl leading-none">${esc(wk.t)}</p><p class="fs text-[#555]">“${esc(wk.q)}”</p></div>
+          <label class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest"><input type="checkbox" class="accent-black w-4 h-4" ${c.done ? 'checked' : ''} onchange="setF('challenges.${n}.done',this.checked,1)"> Challenge done</label>
+        </div>
+        <p class="text-sm text-[#555] mb-3">${esc(wk.f)}</p>
+        <div class="grid md:grid-cols-3 gap-3">
+          <div><label class="lbl">Challenge</label><input class="inp" value="${esc(c.name ?? wk.ch)}" placeholder="Physical challenge this week" onchange="setF('challenges.${n}.name',this.value)">${wk.cd ? `<p class="text-[11px] text-[#888884] mt-1">${esc(wk.cd)}</p>` : ''}</div>
+          <div><label class="lbl">Result</label><input class="inp" value="${esc(c.result || '')}" placeholder="e.g. 1:45 hold, urge hit at 0:50" onchange="setF('challenges.${n}.result',this.value)"></div>
+          <div><label class="lbl">What their head said / notes</label><input class="inp" value="${esc(c.notes || '')}" onchange="setF('challenges.${n}.notes',this.value)"></div>
+        </div>
+        ${p.habits ? `<div class="mt-3 pt-3 border-t border-[#F0F0EB]"><p class="lbl mb-2">Six-week habit check — week ${n}</p><div class="grid md:grid-cols-2 gap-x-4 gap-y-1">
+          ${PERFORM_HABITS.map((h, hi) => `<label class="flex items-center gap-2 text-xs"><input type="checkbox" class="accent-black" ${st.habits[n]?.[hi] ? 'checked' : ''} onchange="setF('habits.${n}.${hi}',this.checked)"> ${esc(h)}</label>`).join('')}</div></div>` : ''}
+      </div>`; }).join('')}
+  </div>`;
 }
 
-// ════════════════════════════════════════════════
-// SCALE BUILDERS
-// ════════════════════════════════════════════════
-function buildScales(containerId, labels, prefix) {
-  const c = document.getElementById(containerId); if (!c) return;
-  c.innerHTML = '';
-  labels.forEach((label,i) => {
-    const d = document.createElement('div'); d.className = 'flex items-center gap-3';
-    d.innerHTML = `<span style="flex:1;font-size:0.85rem;color:#0D0D0D;font-weight:500;min-width:0">${label}</span>
-      <input type="range" min="1" max="10" value="5" id="${prefix}-sc-${i}" oninput="document.getElementById('${prefix}-sv-${i}').textContent=this.value" style="flex:1;min-width:80px;accent-color:#0D0D0D">
-      <span id="${prefix}-sv-${i}" style="font-size:0.9rem;font-weight:700;width:2rem;text-align:center;flex-shrink:0">5</span>`;
-    c.appendChild(d);
-  });
+// ─── TOOLKIT TAB ───
+function tToolkit(st) {
+  const t = st.toolkit;
+  return `<div class="card mb-5 bg-[#0D0D0D] !border-[#0D0D0D] text-white">
+    <p class="text-[10px] tracking-widest uppercase text-[#AAAAAA] mb-2">The Robot Protocol</p>
+    <p class="fd text-3xl leading-none mb-2">UNDERSTAND. BUILD. OWN.</p>
+    <p class="text-sm text-[#CCC]">Know your mind before you try to control it. Train the five tools until they're automatic. Activate your performance identity, on demand.</p>
+  </div>
+  <div class="grid md:grid-cols-2 gap-5">
+    <div class="card"><p class="lbl mb-3">Five trainable tools — tick when automatic</p>
+      ${TOOLS.map((x, i) => `<label class="flex gap-3 py-2 border-b border-[#F0F0EB] last:border-0 cursor-pointer">
+        <input type="checkbox" class="accent-black w-4 h-4 mt-1 flex-shrink-0" ${t.tools[x.k] ? 'checked' : ''} onchange="setF('toolkit.tools.${x.k}',this.checked)">
+        <span><span class="text-xs font-bold">0${i + 1} ${x.n.toUpperCase()}</span><br><span class="text-xs text-[#888884]">${x.d}</span></span></label>`).join('')}
+    </div>
+    <div class="card"><p class="lbl mb-3">Build the Switch</p>
+      <p class="text-xs text-[#888884] mb-4">A specific physical trigger — not a vague feeling. Rehearse it in low-stakes training until it's automatic. Use it every time.</p>
+      <div class="space-y-3">
+        <div><label class="lbl">Performance identity (name)</label><input class="inp" value="${esc(t.identity)}" placeholder="Who they become when they step in" onchange="setF('toolkit.identity',this.value)"></div>
+        <div><label class="lbl">The Switch — physical trigger</label><input class="inp" value="${esc(t.trigger)}" placeholder="A word, a movement, a piece of kit" onchange="setF('toolkit.trigger',this.value)"></div>
+        <div><label class="lbl">Process cue</label><input class="inp" value="${esc(t.cue)}" placeholder="One word — e.g. “Next ball”" onchange="setF('toolkit.cue',this.value)"></div>
+      </div>
+    </div>
+  </div>`;
 }
 
-// ════════════════════════════════════════════════
+// ─── SESSIONS TAB ───
+function logSession() {
+  const st = stu();
+  st.sessions.unshift({date:$('s-date').value || today(), type:$('s-type').value, eng:$('s-eng').value, theme:$('s-theme').value.trim(), obs:$('s-obs').value.trim(), notes:$('s-notes').value.trim(), flag:$('s-flag').checked});
+  save(); toast('Session logged'); render();
+}
+function tSessions(st) {
+  const p = prog(st), w = Math.min(progWeek(st), 6);
+  return `<div class="card mb-4 no-print"><p class="lbl mb-4">Log a session · ${st.sessions.length} of ${st.target}</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+      <div><label class="lbl">Date</label><input id="s-date" type="date" class="inp" value="${today()}"></div>
+      <div><label class="lbl">Type</label><select id="s-type" class="inp">${Object.entries(SESSION_TYPES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>
+      <div><label class="lbl">Engagement</label><select id="s-eng" class="inp">${ENG.slice(1).map((e, i) => `<option value="${i + 1}" ${i === 2 ? 'selected' : ''}>${i + 1} — ${e}</option>`).join('')}</select></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+      <div><label class="lbl">Theme / journal pages</label><input id="s-theme" class="inp" placeholder="e.g. Wk ${w} ${esc(p.weeks[w - 1].t)} — Energy audit"></div>
+      <div><label class="lbl">Key observation (shareable with school / family)</label><input id="s-obs" class="inp" placeholder="Non-confidential"></div>
+    </div>
+    <div><label class="lbl">Private notes (Gary only — never in reports)</label><textarea id="s-notes" rows="3" class="inp resize-none" placeholder="Confidential"></textarea></div>
+    <label class="flex items-center gap-2 text-xs mt-3 text-red-800"><input id="s-flag" type="checkbox" class="accent-red-700"> Safeguarding concern — follow the school's DSL procedure and record actions in private notes</label>
+    <button onclick="logSession()" class="btn mt-4">Log session</button>
+  </div>
+  <div class="space-y-3">${st.sessions.length ? st.sessions.map((s, i) => `<div class="card !p-4 ${s.flag ? 'border-l-4 !border-l-red-700' : ''}">
+    <div class="flex justify-between flex-wrap gap-2 mb-1">
+      <div><span class="text-xs font-bold uppercase tracking-wide">${esc(SESSION_TYPES[s.type] || s.type)}</span> <span class="text-xs text-[#888884]">· ${fmtDate(s.date)} · #${st.sessions.length - i}</span></div>
+      <div class="flex gap-2 items-center"><span class="chip">${ENG[parseInt(s.eng) || 3]}</span>${s.flag ? '<span class="chip !bg-red-100 !text-red-800">Safeguarding</span>' : ''}<button class="text-[#888884] hover:text-red-700 text-sm" title="Delete" onclick="if(confirm('Delete this session?')){stu().sessions.splice(${i},1);save();render()}">×</button></div>
+    </div>
+    ${s.theme ? `<p class="text-xs text-[#555]"><b>Theme:</b> ${esc(s.theme)}</p>` : ''}
+    ${s.obs ? `<p class="text-xs text-[#555]"><b>Observation:</b> ${esc(s.obs)}</p>` : ''}
+    ${s.notes ? `<p class="text-xs text-[#888884] mt-1 italic"><b>Private:</b> ${esc(s.notes)}</p>` : ''}
+  </div>`).join('') : '<p class="text-sm text-[#888884] italic">No sessions yet.</p>'}</div>`;
+}
+
+// ─── GOALS TAB ───
+function addGoal() {
+  const txt = $('g-txt').value.trim(); if (!txt) return;
+  stu().goals.push({text:txt, cat:$('g-cat').value, sch:$('g-sch').checked, par:$('g-par').checked, stuA:$('g-stu').checked, status:'active', date:today()});
+  save(); toast('Goal added'); render();
+}
+function tGoals(st) {
+  const cats = ['behaviour','attendance','academic','wellbeing','habit','social','personal','physical','performance'];
+  return `<div class="card mb-4 no-print"><p class="lbl mb-4">Add agreed goal / measurable</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+      <div class="md:col-span-2"><label class="lbl">Goal</label><input id="g-txt" class="inp" placeholder="e.g. Hand homework in on time 5 days out of 5 by week 6"></div>
+      <div><label class="lbl">Category</label><select id="g-cat" class="inp">${cats.map(c => `<option>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="flex gap-4 mb-3 flex-wrap text-sm text-[#555]">
+      <label class="flex items-center gap-2"><input type="checkbox" id="g-sch" class="accent-black"> Agreed with school / coach</label>
+      <label class="flex items-center gap-2"><input type="checkbox" id="g-par" class="accent-black"> Parent</label>
+      <label class="flex items-center gap-2"><input type="checkbox" id="g-stu" class="accent-black" checked> Student</label>
+    </div><button onclick="addGoal()" class="btn">Add goal</button></div>
+  <div class="space-y-2">${st.goals.length ? st.goals.map((g, i) => { const ag = [g.sch && 'School', g.par && 'Parent', g.stuA && 'Student'].filter(Boolean).join(' · ');
+    return `<div class="card !p-4 flex items-start gap-3 ${g.status === 'achieved' ? '!bg-[#F0F0EB]' : ''}">
+      <input type="checkbox" ${g.status === 'achieved' ? 'checked' : ''} onchange="stu().goals[${i}].status=this.checked?'achieved':'active';save();render()" class="mt-1 w-4 h-4 accent-black flex-shrink-0">
+      <div class="flex-1"><p class="text-sm ${g.status === 'achieved' ? 'line-through text-[#888884]' : 'font-medium'}">${esc(g.text)}</p><p class="text-xs text-[#888884]">${esc(g.cat)}${ag ? ' · ' + ag : ''} · set ${fmtDate(g.date)}</p></div>
+      <button class="text-[#888884] hover:text-red-700" onclick="if(confirm('Delete goal?')){stu().goals.splice(${i},1);save();render()}">×</button></div>`; }).join('') : '<p class="text-sm text-[#888884] italic">No goals yet.</p>'}</div>`;
+}
+
+// ─── CHECK-INS TAB ───
+const TYPE_L = {student:'Student self-report', parent:'Parent observation', staff:'Staff / coach observation'};
+function tCheckins(st) {
+  return `<div class="card mb-5 no-print text-sm flex flex-wrap gap-3 justify-between items-center"><span class="text-[#555]">Responses sent to you by WhatsApp or email? Paste them in <b>Data &amp; Settings → Import a check-in</b>.</span><button class="btn-o" onclick="go('data')">Import</button></div>
+  ${['1','3','6'].map(w => {
+    const lbl = {'1':'BASELINE','3':'MID-POINT','6':'FINAL'}[w];
+    return `<div class="mb-6"><div class="bg-[#0D0D0D] text-white px-4 py-2 mb-3 flex justify-between items-center"><p class="fd text-xl">WEEK ${w} — ${lbl} CHECK-IN</p><button class="text-[10px] tracking-widest uppercase underline text-[#AAAAAA] hover:text-white no-print" onclick="showLinks('${w}')">Send links</button></div>
+      ${['student','parent','staff'].map(t => { const ci = ciFor(st, w, t);
+        if (!ci) return `<div class="border border-dashed border-[#DDDDDA] p-3 mb-2 text-xs text-[#888884] font-bold uppercase tracking-wide">${TYPE_L[t]} — not yet received</div>`;
+        return `<div class="card !p-4 mb-2"><div class="flex justify-between items-center mb-3 flex-wrap gap-2"><p class="text-xs font-bold uppercase tracking-wide">${TYPE_L[t]}</p><span class="text-xs text-[#888884]">${fmtDate(ci.date)}${ci.by ? ' · ' + esc(ci.by) : ''}</span></div>
+          ${ci.scales?.length ? `<div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">${ci.scales.map(s => `<div class="bg-[#F8F8F5] border border-[#DDDDDA] p-2 text-center"><p class="text-[10px] text-[#888884] uppercase tracking-wide leading-tight mb-0.5">${esc(s.label)}</p><p class="fd text-2xl">${esc(s.val)}/10</p></div>`).join('')}</div>` : ''}
+          ${(ci.answers || []).filter(a => a.answer).map(a => `<div class="mb-2"><p class="text-[10px] font-bold text-[#888884] uppercase tracking-wide">${esc(a.q)}</p><p class="text-sm whitespace-pre-line">${esc(a.answer)}</p></div>`).join('')}
+        </div>`; }).join('')}</div>`; }).join('')}`;
+}
+
+// ─── ACCESS & LINKS ───
+function linkFor(st, type, week) {
+  const base = location.href.split('?')[0].split('#')[0];
+  const pw = st.passwords[type]; if (!pw) return null;
+  const q = new URLSearchParams({view:type, id:st.id, w:week, n:st.firstName, pg:st.programme, k:hash(pw + '|' + st.id)});
+  if (S.settings.wa) q.set('wa', S.settings.wa.replace(/\D/g, ''));
+  if (S.settings.email) q.set('em', S.settings.email);
+  return base + '?' + q.toString();
+}
+function msgFor(st, type, week, url) {
+  const who = {student:'', parent:`${st.firstName}'s `, staff:`${st.firstName}'s `}[type];
+  return `Hi — here is ${who}Iron Mind Week ${week} check-in. It takes about 5 minutes.\n\n${url}\n\nPassword: ${st.passwords[type]}\n\nThank you — ${S.settings.name.split(' ')[0]}`;
+}
+const CLIP = [];
+function showLinks(week) {
+  const st = stu(); CLIP.length = 0;
+  openModal(`<h3 class="fd text-2xl mb-1">WEEK ${week} CHECK-IN LINKS</h3><p class="text-sm text-[#888884] mb-5">Send each person their own link and password. When they submit, their answers come back to you as a code by WhatsApp or email to import.</p>
+    <div class="space-y-3">${['student','parent','staff'].map(t => { const url = linkFor(st, t, week);
+      return `<div class="bg-[#F8F8F5] border border-[#DDDDDA] p-4"><p class="text-xs font-bold uppercase tracking-wide mb-2">${TYPE_L[t]}</p>
+        ${url ? `<code class="text-[10px] text-[#888884] block truncate mb-2">${esc(url)}</code><p class="text-xs text-green-700 font-bold mb-3">Password: ${esc(st.passwords[t])}</p>
+          <div class="flex gap-2 flex-wrap"><button class="btn" onclick="copyText(CLIP[${CLIP.push(msgFor(st, t, week, url)) - 1}])">Copy message</button>
+          <a class="btn-o" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msgFor(st, t, week, url))}">WhatsApp</a>
+          <button class="btn-o" onclick="copyText(CLIP[${CLIP.push(url) - 1}])">Link only</button></div>`
+        : `<p class="text-xs text-red-700 font-bold">No ${t} password set — <button class="underline" onclick="closeModal();tab('access')">set one</button>.</p>`}</div>`; }).join('')}</div>
+    <button onclick="closeModal()" class="btn-o mt-5">Close</button>`);
+}
+function tAccess(st) {
+  return `<div class="card mb-5"><p class="lbl mb-1">Check-in passwords for ${esc(st.firstName)}</p>
+    <p class="text-sm text-[#888884] mb-5">One password per person. Each link only opens that person's form. Changing a password breaks links you've already sent.</p>
+    <div class="grid md:grid-cols-3 gap-4">${['student','parent','staff'].map(t => `<div><label class="lbl">${t} password</label>
+      <input class="inp" value="${esc(st.passwords[t])}" placeholder="${{student:'e.g. James26', parent:'e.g. Smith26', staff:'e.g. GWA26'}[t]}" onchange="setF('passwords.${t}',this.value.trim(),1)">
+      <p class="text-xs mt-1 font-bold ${st.passwords[t] ? 'text-green-700' : 'text-[#888884]'}">${st.passwords[t] ? '✓ Set' : '— Not set'}</p></div>`).join('')}</div>
+  </div>
+  <div class="card"><p class="lbl mb-3">Send check-ins</p>
+    <div class="flex gap-3 flex-wrap">${['1','3','6'].map(w => `<button class="btn" onclick="showLinks('${w}')">Week ${w} links</button>`).join('')}</div>
+    <p class="text-xs text-[#888884] mt-4">Before sending, add your WhatsApp number in Data &amp; Settings so people can return their answers to you in one tap.</p>
+  </div>`;
+}
+
+// ─── REPORT ───
+function tReport(st) {
+  const sc = S.schools[UI.sc], p = prog(st), m = st.metrics, set = S.settings;
+  const ach = st.goals.filter(g => g.status === 'achieved').length;
+  const td = 'padding:6px 8px;border-bottom:1px solid #DDDDDA;font-size:.8rem';
+  const th = 'padding:7px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;text-align:center';
+  const H = t => `<p style="font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#888884;margin:22px 0 8px">${t}</p>`;
+  const row = (label, b, mid, f, lower = false, unit = '') => { const B = num(b), F = num(f); if (B == null && num(mid) == null && F == null) return '';
+    const good = B != null && F != null && (lower ? F < B : F > B);
+    return `<tr><td style="${td};font-weight:600">${esc(label)}</td><td style="${td};text-align:center">${B ?? '—'}${B != null ? unit : ''}</td><td style="${td};text-align:center">${num(mid) ?? '—'}${num(mid) != null ? unit : ''}</td><td style="${td};text-align:center">${F ?? '—'}${F != null ? unit : ''}</td><td style="${td};text-align:center;font-weight:700;color:${good ? '#15803d' : '#888884'}">${good ? '↑' : '—'}</td></tr>`; };
+  const scaleRows = type => { const c = PHASES.map(ph => ciFor(st, ph.w, type)); const ref = c.find(Boolean); if (!ref?.scales) return '';
+    return ref.scales.map((s, i) => row(`${s.label} (${type})`, c[0]?.scales?.[i]?.val, c[1]?.scales?.[i]?.val, c[2]?.scales?.[i]?.val)).join(''); };
+  const qa = (ci, l) => { const a = (ci?.answers || []).filter(x => x.answer); if (!a.length) return '';
+    return `<p style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin:10px 0 6px">${l}</p>` + a.map(x => `<div style="margin-bottom:6px;padding:8px 10px;background:#F8F8F5;border:1px solid #DDDDDA"><p style="font-size:.62rem;font-weight:700;color:#888884;text-transform:uppercase;letter-spacing:.1em">${esc(x.q)}</p><p style="font-size:.85rem;white-space:pre-line">${esc(x.answer)}</p></div>`).join(''); };
+  const tbl = rows => rows.trim() ? `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#0D0D0D;color:#fff"><th style="${th};text-align:left">Measure</th><th style="${th}">Baseline</th><th style="${th}">Week 3</th><th style="${th}">Week 6</th><th style="${th}">Change</th></tr></thead><tbody>${rows}</tbody></table>` : '<p style="font-size:.8rem;color:#888884;font-style:italic">Not recorded yet.</p>';
+  const tk = st.toolkit, toolsDone = TOOLS.filter(x => tk.tools[x.k]).map(x => x.n);
+  return `<div class="flex gap-3 mb-4 no-print"><button class="btn" onclick="window.print()">Print / Save as PDF</button><p class="text-xs text-[#888884] self-center">Private notes and referral reason are never included.</p></div>
+  <div class="card no-print mb-4"><label class="lbl">Gary's assessment and recommended next steps</label><textarea class="inp" rows="5" placeholder="Write this before sharing with school and family." onchange="setF('assessment',this.value,1)">${esc(st.assessment)}</textarea></div>
+  <div class="bg-white border border-[#DDDDDA]" style="padding:32px;line-height:1.55">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-bottom:16px;border-bottom:2px solid #0D0D0D">
+      <div><p class="fd" style="font-size:1.7rem;line-height:1">IRON MIND MENTORING</p><p style="font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:#888884">${esc(p.name)} · Progress Report</p></div>
+      <div style="text-align:right"><p style="font-weight:700">${esc(st.firstName)} ${esc(st.lastI)}.</p><p style="font-size:.75rem;color:#888884">${esc(st.yearGroup)} · ${esc(sc.name)}</p><p style="font-size:.75rem;color:#888884">Started ${fmtDate(st.startDate)} · Report ${fmtDate(today())}</p></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px">
+      ${[['Sessions', `${st.sessions.length}`, `of ${st.target}`], ['Goals', `${ach}/${st.goals.length || '—'}`, 'achieved'], ['Daily pages', `${st.daily.filter(x => x === 1).length}`, 'of 42 days'], ['Challenges', `${Object.values(st.challenges).filter(c => c.done).length}/6`, 'completed']].map(([l, v, s]) => `<div style="background:#F8F8F5;border:1px solid #DDDDDA;padding:10px;text-align:center"><p style="font-size:.58rem;text-transform:uppercase;letter-spacing:.15em;color:#888884">${l}</p><p class="fd" style="font-size:2rem;line-height:1">${v}</p><p style="font-size:.62rem;color:#888884">${s}</p></div>`).join('')}
+    </div>
+    ${H(`Mental profile — ${esc(p.short)} self-rating (1–10)`)}${tbl(p.dims.map(d => row(d, st.mental.b[d], st.mental.m[d], st.mental.f[d])).join(''))}
+    ${H('Physical baseline and re-test')}${tbl(st.physical.map(t => row(t.name, t.b, t.m, t.f, t.lower, t.unit ? ' ' + esc(t.unit) : '')).join(''))}
+    ${p.wheel && WHEEL.some(w => num(st.wheel.b[w]) != null) ? H('The Wheel — baseline vs week 6') + `<div style="max-width:380px">${radar(st)}</div>` : ''}
+    ${H('School measurables and observer ratings')}${tbl(row('Behaviour points', m.bb, '', m.ba, true) + row('Attendance', m.ab, '', m.aa, false, '%') + row('Effort grade /5', m.eb, '', m.ea) + scaleRows('parent') + scaleRows('staff'))}
+    ${st.goals.length ? H('Agreed goals') + st.goals.map(g => `<div style="display:flex;gap:10px;padding:6px;border-bottom:1px solid #DDDDDA;font-size:.85rem"><b style="color:${g.status === 'achieved' ? '#15803d' : '#BBB'}">${g.status === 'achieved' ? '✓' : '○'}</b>${esc(g.text)}<span style="margin-left:auto;font-size:.62rem;text-transform:uppercase;color:#888884">${esc(g.cat)}</span></div>`).join('') : ''}
+    ${toolsDone.length || tk.trigger || tk.cue ? H('Performance toolkit') + `<p style="font-size:.85rem">${toolsDone.length ? '<b>Tools in use:</b> ' + toolsDone.join(', ') + '<br>' : ''}${tk.identity ? `<b>Performance identity:</b> ${esc(tk.identity)}<br>` : ''}${tk.trigger ? `<b>The Switch:</b> ${esc(tk.trigger)}<br>` : ''}${tk.cue ? `<b>Process cue:</b> ${esc(tk.cue)}` : ''}</p>` : ''}
+    ${st.sessions.length ? H('Sessions') + `<table style="width:100%;border-collapse:collapse;font-size:.78rem"><tbody>${st.sessions.slice().reverse().map(s => `<tr style="border-bottom:1px solid #DDDDDA"><td style="padding:4px 8px;white-space:nowrap">${fmtDate(s.date)}</td><td style="padding:4px 8px">${esc(SESSION_TYPES[s.type] || s.type)}</td><td style="padding:4px 8px;color:#555">${esc(s.theme || s.obs || '—')}</td><td style="padding:4px 8px;font-weight:700;text-align:right">${ENG[parseInt(s.eng) || 3]}</td></tr>`).join('')}</tbody></table>` : ''}
+    ${PHASES.map(ph => { const c = ['student','parent','staff'].map(t => ciFor(st, ph.w, t)); if (!c.some(Boolean)) return '';
+      return H(`Voices — Week ${ph.w}`) + qa(c[0], 'Student') + qa(c[1], 'Parent') + qa(c[2], 'Staff / coach'); }).join('')}
+    ${H("Gary's assessment and next steps")}<div style="background:#F8F8F5;border:1px solid #DDDDDA;padding:14px;min-height:70px;font-size:.88rem;white-space:pre-line">${st.assessment ? esc(st.assessment) : '<span style="color:#888884;font-style:italic">[To be completed before sharing.]</span>'}</div>
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:14px;margin-top:22px;border-top:1px solid #DDDDDA">
+      <div><p style="font-size:.75rem;font-weight:700">${esc(set.name)} — Iron Mind Mentoring</p><p style="font-size:.7rem;color:#888884">${esc(set.email)}${set.web ? ' · ' + esc(set.web) : ''}</p></div>
+      <div style="text-align:right"><p style="font-size:.7rem;color:#888884">Develop the Mind. Build the Body.</p><p style="font-size:.62rem;color:#888884">Confidential — for school and family use only</p></div>
+    </div>
+  </div>`;
+}
+
+// ─── WORKSHOPS (Robot Protocol pilot) ───
+const WS_STATUS = {proposed:'Proposed', booked:'Booked', delivered:'Delivered', followed:'Followed up'};
+function wsModal(i) {
+  const w = i != null ? S.workshops[i] : {org:'', contact:'', date:today(), athletes:'', status:'proposed', cards:false, briefing:false, followup:'', notes:''};
+  openModal(`<h3 class="fd text-2xl mb-1">${i != null ? 'EDIT' : 'NEW'} WORKSHOP</h3><p class="text-xs text-[#888884] mb-5">The Robot Protocol — 30-minute pilot for teams &amp; clubs</p>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="col-span-2"><label class="lbl">Team / club / school</label><input id="w-org" class="inp" value="${esc(w.org)}"></div>
+      <div><label class="lbl">Contact</label><input id="w-contact" class="inp" value="${esc(w.contact)}"></div>
+      <div><label class="lbl">Date</label><input id="w-date" type="date" class="inp" value="${esc(w.date)}"></div>
+      <div><label class="lbl">Athletes</label><input id="w-ath" type="number" class="inp" value="${esc(w.athletes)}"></div>
+      <div><label class="lbl">Status</label><select id="w-status" class="inp">${Object.entries(WS_STATUS).map(([k, v]) => `<option value="${k}" ${w.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+      <label class="flex items-center gap-2 text-sm"><input id="w-cards" type="checkbox" class="accent-black" ${w.cards ? 'checked' : ''}> Protocol cards handed out</label>
+      <label class="flex items-center gap-2 text-sm"><input id="w-brief" type="checkbox" class="accent-black" ${w.briefing ? 'checked' : ''}> Staff briefing done</label>
+      <div class="col-span-2"><label class="lbl">Follow-up conversation date</label><input id="w-fu" type="date" class="inp" value="${esc(w.followup)}"></div>
+      <div class="col-span-2"><label class="lbl">Notes</label><textarea id="w-notes" rows="3" class="inp resize-none">${esc(w.notes)}</textarea></div>
+    </div>
+    <div class="flex gap-3"><button class="btn" onclick="saveWs(${i ?? 'null'})">Save</button><button class="btn-o" onclick="closeModal()">Cancel</button>${i != null ? `<button class="btn-o ml-auto" onclick="if(confirm('Delete?')){S.workshops.splice(${i},1);save();closeModal();render()}">Delete</button>` : ''}</div>`);
+}
+function saveWs(i) {
+  const w = {org:$('w-org').value.trim(), contact:$('w-contact').value.trim(), date:$('w-date').value, athletes:$('w-ath').value, status:$('w-status').value, cards:$('w-cards').checked, briefing:$('w-brief').checked, followup:$('w-fu').value, notes:$('w-notes').value.trim()};
+  if (!w.org) return toast('Name required');
+  if (i == null) S.workshops.push(w); else S.workshops[i] = w;
+  save(); closeModal(); render();
+}
+function pgWorkshops() {
+  const ws = S.workshops.map((w, i) => ({w, i})).sort((a, b) => (b.w.date || '').localeCompare(a.w.date || ''));
+  return wrap(`<div class="flex flex-wrap justify-between items-end gap-3 mb-5">
+      <div><p class="fd text-3xl leading-none">THE ROBOT PROTOCOL</p><p class="text-sm text-[#888884]">30-minute pilot workshops for teams &amp; clubs: the story, the research, and a hands-on build of each athlete's Switch.</p></div>
+      <button class="btn" onclick="wsModal()">+ Workshop</button></div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      ${stat('Workshops', ws.length)}${stat('Athletes reached', S.workshops.reduce((a, w) => a + (parseInt(w.athletes) || 0), 0))}
+      ${stat('Delivered', S.workshops.filter(w => ['delivered','followed'].includes(w.status)).length)}
+      ${stat('Follow-ups due', S.workshops.filter(w => w.status === 'delivered' && w.followup && w.followup <= today()).length)}
+    </div>
+    <div class="space-y-2">${ws.length ? ws.map(({w, i}) => `<div class="card !p-4 flex flex-wrap justify-between items-center gap-3 cursor-pointer hover:border-[#0D0D0D]" onclick="wsModal(${i})">
+      <div><p class="font-bold">${esc(w.org)} <span class="chip ml-1">${WS_STATUS[w.status]}</span></p>
+      <p class="text-xs text-[#888884]">${fmtDate(w.date)}${w.athletes ? ' · ' + esc(w.athletes) + ' athletes' : ''}${w.contact ? ' · ' + esc(w.contact) : ''} · Cards ${w.cards ? '✓' : '—'} · Briefing ${w.briefing ? '✓' : '—'}${w.followup ? ' · Follow-up ' + fmtDate(w.followup) : ''}</p></div>
+      <span class="text-xs text-[#888884]">Edit →</span></div>`).join('') : '<p class="text-sm text-[#888884] italic">No workshops logged yet.</p>'}</div>
+    <div class="card mt-6"><p class="lbl mb-3">Running order — thirty minutes, six moves</p>
+      <div class="grid md:grid-cols-3 gap-3 text-sm">${[['The Hook','5 min','The Kobe / Black Mamba story.'],['Watch','3 min','The coach who built it, in his own words.'],['The Research','5 min','Self-distancing: White & Carlson (2017); Michel-Kröhler et al. (2021).'],['The Protocol','9 min','All five tools, and The Switch in depth.'],['How This Fits','3 min','Understand. Build. Own.'],['The Pilot','5 min','Workshop, protocol cards, staff briefing, follow-up.']].map(([t, d, x], i) => `<div class="bg-[#F8F8F5] border border-[#DDDDDA] p-3"><p class="text-xs font-bold">${i + 1}. ${t.toUpperCase()} <span class="text-[#888884] font-normal">· ${d}</span></p><p class="text-xs text-[#555] mt-1">${x}</p></div>`).join('')}</div></div>`);
+}
+
+// ─── PROGRAMMES LIBRARY ───
+function pgLibrary() {
+  return wrap(`<div class="mb-5"><p class="fd text-3xl leading-none">PROGRAMMES</p><p class="text-sm text-[#888884]">Mind first — the gym is where we test it. Physical and mental baselines at week 0, re-tested at week 6.</p></div>
+    <div class="space-y-5">${Object.entries(PROGS).filter(([k]) => k !== 'ownit_girls').map(([k, p]) => `<div class="card">
+      <div class="flex flex-wrap justify-between gap-2 mb-3"><div><p class="fd text-2xl leading-none">${esc(k === 'ownit_boys' ? 'OWN IT — Boys & Girls' : p.name)}</p><p class="text-xs text-[#888884]">${esc(p.who)}</p></div>
+        <div class="flex flex-wrap gap-1">${p.dims.map(d => `<span class="chip">${d}</span>`).join('')}</div></div>
+      <div class="grid grid-cols-2 md:grid-cols-6 gap-2">${p.weeks.map((w, i) => `<div class="bg-[#F8F8F5] border border-[#DDDDDA] p-3"><p class="text-[10px] font-bold text-[#888884]">WEEK ${i + 1}</p><p class="text-sm font-bold leading-tight">${esc(w.t)}</p><p class="text-[11px] text-[#555] mt-1 leading-snug">${esc(w.q)}</p>${w.ch ? `<p class="text-[10px] mt-2 font-bold uppercase tracking-wide">⚑ ${esc(w.ch)}</p>` : ''}</div>`).join('')}</div>
+      ${p.habits ? `<p class="lbl mt-4 mb-1">Six-week habit check</p><p class="text-xs text-[#555]">${PERFORM_HABITS.map(esc).join(' · ')}</p>` : ''}
+    </div>`).join('')}
+    <div class="card"><p class="fd text-2xl leading-none mb-3">THE FIVE TOOLS</p><div class="grid md:grid-cols-5 gap-2">${TOOLS.map((t, i) => `<div class="bg-[#F8F8F5] border border-[#DDDDDA] p-3"><p class="text-xs font-bold">0${i + 1} ${t.n.toUpperCase()}</p><p class="text-[11px] text-[#555] mt-1">${t.d}</p></div>`).join('')}</div></div>
+    <div class="card"><p class="fd text-2xl leading-none mb-2">THE LINE</p><p class="text-sm text-[#555]">We don't lead with appearance — but if a young person raises it, we work with it honestly. OWN IT is mentoring, not counselling: if something comes up that's more than they can carry, it goes to a parent, the school's safeguarding lead or another trusted adult.</p></div>
+    </div>`);
+}
+
+// ─── DATA & SETTINGS ───
+function exportData() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `ironmind-backup-${today()}.json`; a.click();
+  S.lastBackup = new Date().toISOString(); save(); setTimeout(render, 300);
+}
+function importBackup(input) {
+  const f = input.files[0]; if (!f) return;
+  f.text().then(t => { const d = JSON.parse(t); if (!d.schools) throw 0;
+    if (!confirm('Replace ALL current data with this backup?')) return;
+    localStorage.setItem(KEY, JSON.stringify(d)); load(); toast('Backup restored'); render();
+  }).catch(() => toast('That file is not an Iron Mind backup'));
+}
+function applyCheckin(payload) {
+  const hit = findById(payload.id); if (!hit) return {ok:false, msg:'No client matches this code (was the client deleted or created on another device?)'};
+  const st = hit.st, ci = payload.ci;
+  st.checkins = st.checkins.filter(c => !(c.week === ci.week && c.type === ci.type)); st.checkins.push(ci);
+  if (ci.type === 'student') {
+    const k = (PHASES.find(p => p.w === ci.week) || {}).k;
+    if (k && ci.dims) Object.entries(ci.dims).forEach(([d, v]) => st.mental[k][d] = v);
+    if (ci.wheel && (k === 'b' || k === 'f')) Object.entries(ci.wheel).forEach(([d, v]) => st.wheel[k][d] = v);
+  }
+  save(); return {ok:true, msg:`${TYPE_L[ci.type]} · Week ${ci.week} imported for ${st.firstName} ${st.lastI}.`, hit};
+}
+function importCodes() {
+  const txt = $('imp-txt').value, codes = txt.match(/IMM1\.[A-Za-z0-9_-]+/g) || [];
+  if (!codes.length) return toast('No check-in code found in that text');
+  const res = codes.map(c => { try { return applyCheckin(b64d(c.slice(5))); } catch (e) { return {ok:false, msg:'A code was damaged — ask them to resend it'}; } });
+  $('imp-res').innerHTML = res.map(r => `<p class="text-sm ${r.ok ? 'text-green-700' : 'text-red-700'}">${r.ok ? '✓' : '✗'} ${esc(r.msg)}</p>`).join('');
+  $('imp-txt').value = '';
+}
+function changePw() {
+  const a = $('pw1').value.trim(), b = $('pw2').value.trim();
+  if (a.length < 6) return toast('Use at least 6 characters'); if (a !== b) return toast("Passwords don't match");
+  localStorage.setItem(PW_KEY, a); toast('Password updated'); render();
+}
+function saveSettings() { ['name','email','web','wa'].forEach(k => S.settings[k] = $('set-' + k).value.trim()); save(); toast('Settings saved'); }
+function pgData() {
+  const s = S.settings;
+  return wrap(`<div class="grid md:grid-cols-2 gap-5">
+    <div class="card md:col-span-2"><p class="lbl mb-1">Import a check-in</p>
+      <p class="text-sm text-[#888884] mb-3">When a student, parent or staff member submits a form, they send you a message containing a code starting <code>IMM1.</code> Paste the whole message (or several) here.</p>
+      <textarea id="imp-txt" rows="4" class="inp mb-3 font-mono text-xs" placeholder="Paste WhatsApp / email message here"></textarea>
+      <button class="btn" onclick="importCodes()">Import</button><div id="imp-res" class="mt-3 space-y-1"></div></div>
+    <div class="card"><p class="lbl mb-3">Your details (used on links and reports)</p>
+      <div class="space-y-3">
+        <div><label class="lbl">Name</label><input id="set-name" class="inp" value="${esc(s.name)}"></div>
+        <div><label class="lbl">Email (check-ins can be emailed back here)</label><input id="set-email" class="inp" value="${esc(s.email)}"></div>
+        <div><label class="lbl">Website</label><input id="set-web" class="inp" value="${esc(s.web)}"></div>
+        <div><label class="lbl">WhatsApp number (international, e.g. 9715…)</label><input id="set-wa" class="inp" value="${esc(s.wa)}" placeholder="971501234567"></div>
+      </div><button class="btn mt-4" onclick="saveSettings()">Save</button></div>
+    <div class="space-y-5">
+      <div class="card"><p class="lbl mb-1">Backup</p><p class="text-sm text-[#888884] mb-3">Data lives in this browser only. Download a backup weekly, and use it to move to a new device.${S.lastBackup ? ` Last backup: ${fmtDate(S.lastBackup)}.` : ''}</p>
+        <div class="flex gap-2 flex-wrap"><button class="btn" onclick="exportData()">Download backup</button><label class="btn-o cursor-pointer">Restore backup<input type="file" accept=".json,application/json" class="hidden" onchange="importBackup(this)"></label></div></div>
+      <div class="card"><p class="lbl mb-3">Change your password</p>
+        <div class="grid grid-cols-2 gap-3"><input id="pw1" type="password" class="inp" placeholder="New password"><input id="pw2" type="password" class="inp" placeholder="Repeat"></div>
+        <button class="btn mt-3" onclick="changePw()">Update</button></div>
+    </div></div>`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHECK-IN FORMS (student / parent / staff)
+// ═══════════════════════════════════════════════════════════════
+function scaleRow(id, label) {
+  return `<div class="flex items-center gap-3"><span class="flex-1 text-sm font-medium min-w-0">${esc(label)}</span>
+    <input type="range" min="1" max="10" value="5" id="${id}" oninput="document.getElementById('${id}-v').textContent=this.value" class="flex-1 min-w-[90px]">
+    <span id="${id}-v" class="w-8 text-center font-bold">5</span></div>`;
+}
+function renderForm() {
+  const week = ['1','3','6'].includes(params.get('w') || params.get('week')) ? (params.get('w') || params.get('week')) : '3';
+  const name = params.get('n') || 'your child';
+  const p = PROGS[params.get('pg')] || null;
+  const qs = Q[ROLE][week === '1' ? '1' : 'x'].map(([q, ph]) => [q.replace(/\{n\}/g, name), ph.replace(/\{n\}/g, name)]);
+  const wkL = {'1':'Baseline', '3':'Mid-Point', '6':'Final'}[week];
+  const intro = {
+    student:'"This is your honest check-in. Nobody else sees these answers unless you choose to share them. Take your time."',
+    parent:`Thank you for taking a few minutes to share what you've seen at home. Your view is an important part of how we understand ${esc(name)}'s progress.`,
+    staff:`Thank you for sharing your observations. Your view helps Gary understand what is — and isn't — carrying over from sessions into school life.`,
+  }[ROLE];
+  let scales = '';
+  if (ROLE === 'student') {
+    const dims = p ? p.dims : ['Confidence','Focus','Energy','Resilience'];
+    scales = `<p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">Where are you now? (1 = not like me yet · 10 = this is me nearly every day)</p>
+      <div class="space-y-4 mb-6">${dims.map((d, i) => scaleRow('dim-' + i, d)).join('')}</div>
+      ${p?.wheel && week !== '3' ? `<p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">The Wheel — how is each part of your life going? (10 = really well)</p><div class="space-y-4 mb-6">${WHEEL.map((w, i) => scaleRow('wh-' + i, w)).join('')}</div>` : ''}`;
+  } else {
+    const L = ROLE === 'parent' ? PAR_SCALES : STF_SCALES;
+    scales = `<p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">How are things right now? (1 = real concern · 10 = really positive)</p><div class="space-y-4 mb-6">${L.map((l, i) => scaleRow('sc-' + i, l)).join('')}</div>`;
+  }
+  $('root').innerHTML = `<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="bg-white border border-[#DDDDDA] relative overflow-hidden">
+      <div class="bg-[#0D0D0D] px-6 py-5"><p class="fd text-2xl text-white">IRON MIND MENTORING</p>
+        <p class="text-[#AAAAAA] text-xs tracking-widest uppercase mt-1">${{student:'Student', parent:'Parent', staff:'Staff / Coach'}[ROLE]} Check-In — Week ${week} (${wkL})${p ? ' · ' + esc(p.short) : ''}</p></div>
+      <div class="p-6" id="form-body">
+        <p class="text-sm text-[#555] italic mb-6 leading-relaxed ${ROLE === 'student' ? 'fs' : ''}">${intro}</p>
+        ${ROLE !== 'student' ? `<div class="grid grid-cols-2 gap-4 mb-5"><div><label class="lbl">Your name${ROLE === 'staff' ? ' and role' : ' (optional)'}</label><input id="f-by" class="inp" placeholder="${ROLE === 'staff' ? 'e.g. Mr Ahmed, Head of Year 8' : 'Optional'}"></div><div><label class="lbl">Date</label><input id="f-date" type="date" class="inp" value="${today()}"></div></div>` : ''}
+        ${scales}
+        <p class="lbl border-b border-[#DDDDDA] pb-2 mb-4">In your own words</p>
+        <div class="space-y-4">${qs.map(([q, ph], i) => `<div><label class="lbl !normal-case !tracking-normal !text-sm !text-[#0D0D0D] !font-bold">${esc(q)}</label><textarea id="q-${i}" rows="3" class="inp resize-none" placeholder="${esc(ph)}"></textarea></div>`).join('')}</div>
+        <button onclick="submitForm('${week}')" class="w-full mt-6 btn !py-3">Submit check-in</button>
+      </div>
+    </div></div>`;
+}
+function submitForm(week) {
+  const p = PROGS[params.get('pg')] || null, name = params.get('n') || '';
+  const qs = Q[ROLE][week === '1' ? '1' : 'x'];
+  const ci = {type:ROLE, week, date:($('f-date')?.value || today()), by:($('f-by')?.value.trim() || undefined),
+    answers:qs.map(([q], i) => ({q:q.replace(/\{n\}/g, name || 'them'), answer:$('q-' + i).value.trim()}))};
+  if (ROLE === 'student') {
+    const dims = p ? p.dims : ['Confidence','Focus','Energy','Resilience'];
+    ci.dims = {}; dims.forEach((d, i) => ci.dims[d] = parseInt($('dim-' + i).value));
+    ci.scales = dims.map(d => ({label:d, val:ci.dims[d]}));
+    if (p?.wheel && week !== '3') { ci.wheel = {}; WHEEL.forEach((w, i) => ci.wheel[w] = parseInt($('wh-' + i).value)); }
+  } else {
+    ci.scales = (ROLE === 'parent' ? PAR_SCALES : STF_SCALES).map((l, i) => ({label:l, val:parseInt($('sc-' + i).value)}));
+  }
+  let id = params.get('id');
+  if (!id) { const legacy = S.schools[params.get('school')]?.students?.[+params.get('student')]; id = legacy?.id; }
+  const code = 'IMM1.' + b64e({id, ci});
+  const local = id ? findById(id) : null;
+  if (local) applyCheckin({id, ci});
+  const who = {student:name, parent:`${name}'s parent`, staff:`staff re ${name}`}[ROLE];
+  const text = `Iron Mind check-in — ${who} · Week ${week}\n\n${code}`;
+  const wa = params.get('wa'), em = params.get('em');
+  $('form-body').innerHTML = `<div class="text-center py-4">
+    <p class="fd text-4xl mb-2">${ROLE === 'parent' ? 'THANK YOU.' : 'SUBMITTED.'}</p>
+    ${local ? `<p class="text-sm text-[#555] mb-2">Saved straight into the tracker on this device.</p>` : `
+    <p class="text-sm text-[#555] mb-6">One last step — send your answers to Gary. Tap a button below; the message is ready to go.</p>
+    <div class="flex flex-col gap-3 max-w-xs mx-auto">
+      ${wa ? `<a class="btn !py-3" target="_blank" rel="noopener" href="https://wa.me/${encodeURIComponent(wa)}?text=${encodeURIComponent(text)}">Send on WhatsApp</a>` : `<a class="btn !py-3" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(text)}">Send on WhatsApp</a>`}
+      ${em ? `<a class="btn-o !py-3" href="mailto:${esc(em)}?subject=${encodeURIComponent('Iron Mind check-in — Week ' + week)}&body=${encodeURIComponent(text)}">Send by email</a>` : ''}
+      <button class="btn-o !py-3" onclick="copyText(document.getElementById('code').value)">Copy answers</button>
+    </div>
+    <textarea id="code" readonly class="inp mt-5 font-mono text-[10px]" rows="3">${esc(text)}</textarea>`}
+    <p class="text-sm text-[#888884] mt-5">${ROLE === 'student' ? 'Gary will read this before your next session. Good work showing up.' : 'Gary will review this before the next session.'}</p></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // INIT
-// ════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 load();
-buildScales('stu-scales', STU_SCALES, 'stu');
-buildScales('par-scales', PAR_SCALES, 'par');
-buildScales('stf-scales', STF_SCALES, 'stf');
-
-const todayStr = new Date().toISOString().split('T')[0];
-['s-date','stf-date','nu-date'].forEach(id => { const el=document.getElementById(id); if(el) el.value=todayStr; });
-
-// Handle URL params
-const params = new URLSearchParams(window.location.search);
-const viewParam = params.get('view');
-const scParam = params.get('school');
-const siParam = params.get('student');
-const weekParam = params.get('week');
-
-if (viewParam && ['student','parent','staff'].includes(viewParam)) {
-  // Store context for password check
-  sessionStorage.setItem('imm_view', viewParam);
-  if (scParam) sessionStorage.setItem('imm_sc', scParam);
-  if (siParam !== null) sessionStorage.setItem('imm_si', siParam);
-
-  // Update lock screen for this role
-  const roleLabels = {student:'Student Check-In',parent:'Parent Check-In',staff:'Staff Check-In'};
-  document.getElementById('lock-subtitle').textContent = roleLabels[viewParam];
-  document.getElementById('lock-label').textContent = `Enter your ${viewParam} password to continue`;
-
-  // Update form title with week context
-  if (weekParam) {
-    const titleIds = {student:'stu-title',parent:'par-title',staff:'stf-title'};
-    const el = document.getElementById(titleIds[viewParam]);
-    const wkSuffix = weekParam==='1'?' (Baseline)':weekParam==='3'?' (Mid-Point)':' (Final)';
-    if (el) el.textContent = `${roleLabels[viewParam]} — Week ${weekParam}${wkSuffix}`;
-  }
-
-  // Update form questions if Week 1 baseline
-  if (weekParam === '1') {
-    if (viewParam === 'student') {
-      var q = ['sq1','sq2','sq3','sq4','sq5','sq6'];
-      var labels = ['What brought you here today?','What do you most want to change?',
-        "What are you good at that people don't always notice?",
-        'What does a good week look like for you?',
-        'What do you want Gary to know about you?','Anything else on your mind?'];
-      var placeholders = ['Be honest — there are no wrong answers.',
-        'Think about school, home, or how you feel.',
-        "Don't be modest — what are you genuinely good at?",
-        'Describe it — what would it feel like?',
-        'Anything at all — this is just for Gary.','Optional.'];
-      q.forEach(function(id,i) {
-        var el2 = document.getElementById(id);
-        if (el2) el2.placeholder = placeholders[i];
-      });
-      // Update labels
-      var lblEls = document.querySelectorAll('#view-student .lbl');
-      var stuLabels = ['What brought you here today?','What do you most want to change?',
-        "What are you good at that people don't always notice?",
-        'What does a good week look like for you?',
-        'What do you want Gary to know about you?','Anything else on your mind?'];
-      var count = 0;
-      lblEls.forEach(function(el2) {
-        if (count < stuLabels.length && el2.closest('textarea,div') !== null) {
-          if (el2.nextElementSibling && el2.nextElementSibling.tagName === 'TEXTAREA') {
-            el2.textContent = stuLabels[count++];
-          }
-        }
-      });
-    }
-    if (viewParam === 'parent') {
-      document.getElementById('pq1').placeholder = 'What has been most difficult recently?';
-      document.getElementById('pq2').placeholder = 'At home, at school, with friendships...';
-      document.getElementById('pq3').placeholder = 'Counselling, school support, conversations...';
-      document.getElementById('pq4').placeholder = 'What would you like to see change?';
-      document.getElementById('pq5').placeholder = 'Anything at all that would help Gary understand your son.';
-    }
-    if (viewParam === 'staff') {
-      document.getElementById('tfq1').placeholder = 'What has led to this referral?';
-      document.getElementById('tfq2').placeholder = 'Behaviour, engagement, relationships, attendance...';
-      document.getElementById('tfq3').placeholder = "What is he genuinely good at? What does he respond well to?";
-      document.getElementById('tfq4').placeholder = 'What would improvement look like from your perspective?';
-    }
-  }
-
-  // Store context for submission
-  if (scParam) S.csc = scParam;
-  if (siParam !== null) S.cs = parseInt(siParam);
-
-} else {
-  sessionStorage.setItem('imm_view', 'gary');
-  document.getElementById('lock-label').textContent = 'Enter your password to access the full dashboard';
-  // Build school select for Gary
-  buildSchoolSel();
-}
+initLock();
 </script>
 </body>
 </html>
